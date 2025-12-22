@@ -1,7 +1,7 @@
 # ​**PCL-Reasoner-V1.5**​
 
 ## Model Overview  
-We release **PCL-Reasoner-V1.5**, a next-generation reasoning model built upon **PCL-Reasoner-V1** and further enhanced through **offline reinforcement learning** method on the **MindSpeed-LLM framework** with **Ascend hardware acceleration**. Building on the strong foundation of PCL-Reasoner-V1, PCL-Reasoner-V1.5 achieves even greater proficiency in complex mathematical reasoning, demonstrating state-of-the-art performance among 32B-scale models.
+We release **PCL-Reasoner-V1.5**, a next-generation reasoning model built upon **PCL-Reasoner-V1** and further enhanced through **offline policy gradient learning** method on the **vllm-ascend** and **MindSpeed-LLM framework** with **Ascend hardware acceleration**. Building on the strong foundation of PCL-Reasoner-V1, PCL-Reasoner-V1.5 achieves even greater improvement in complex mathematical reasoning with long chains of thought (CoT), demonstrating state-of-the-art performance among 32B-scale models.
 
 PCL-Reasoner-V1.5 attains **9x.x% on AIME 2024** and **9x.x% on AIME 2025**, significantly outperforming prior 32B-class models and closing the gap with much larger systems. This advancement stems from **~~refined data curation, improved contamination filtering, and optimized training dynamics~~** tailored for deep reasoning tasks.
 
@@ -35,7 +35,7 @@ All results are reported using the **Avg@32 metric** (average accuracy over 32 i
 |                | DeepSeek-R1-Distill-Qwen-32B        | <span style="color:grey">72.6</span> | <span style="color:grey">49.6</span> |
 |                | Skywork-OR1-32B                     | <span style="color:grey">82.2</span> | <span style="color:grey">73.3</span> |
 |                | AM-Thinking-v1                      | <span style="color:grey">85.3</span> | <span style="color:grey">74.4</span> |
-|                | PCL-Reasoner-V1                     | **85.7** | **84.2** |
+|                | PCL-Reasoner-V1                     | <span style="color:grey">85.7</span> | <span style="color:grey">84.2</span> |
 |                | OpenReasoning-Nemotron-32B          | <span style="color:grey">89.2</span> | <span style="color:grey">84.0</span> |
 |                | **PCL-Reasoner-V1.5**                             | **9x.x** | **9x.x** |
 
