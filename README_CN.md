@@ -95,7 +95,7 @@ cat $output_dir_path/*jsonl > Nemotron-Post-Training-Dataset-v1/all_samples.json
 
 ##### 2.2.4 采样COT正确性评估
 
-基于以往训练经验，我们发现传统的math_verify方法无法有效评估COT回答的正确性。对于复杂的数学题，使用规则匹配的方式容易产生较大误判。因此，我们采用Qwen3-32B模型对COT回答的正确性进行评估，具体思路如下：
+基于以往训练经验，我们发现传统采用python包`math_verify`方法无法在所有场景下有效评估COT回答的正确性。对于复杂的数学题，使用规则匹配的方式总会产生各种误判情况。因此，我们采用Qwen3-32B模型对COT回答的正确性进行评估，具体思路如下：
 
 1. 为`Qwen3-32B`模型设计专门的prompt，用于判断COT中包含的最终答案是否与题目提供的`ground truth`一致；
 2. 部署`Qwen3-32B`模型对48K题目进行推理评估；
