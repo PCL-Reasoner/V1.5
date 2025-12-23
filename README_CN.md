@@ -150,7 +150,7 @@ python convert_ckpt.py \
        --save-dir ~/local/Qwen/mcore/qwen2.5_32b/ \
        --tokenizer-model ~/local/Qwen/Qwen2.5-32B/tokenizer.json \
        --model-type-hf llama2 \
-       --params-dtype bf16 # --num-layer-list 11, 13, 19, 21 参数根据需要添加
+       --params-dtype bf16
 ```
 
 ###### 参数介绍
@@ -192,11 +192,7 @@ python preprocess_data.py \
 	--log-interval 1000
 ```
 
-
-
-
 #### 3.3 训练配置
-
 
 #### 3.4 启动训练
 
