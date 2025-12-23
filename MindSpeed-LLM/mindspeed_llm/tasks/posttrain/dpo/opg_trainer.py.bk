@@ -1,0 +1,160 @@
+# Copyright (c) 2024, HUAWEI CORPORATION.  All rights reserved.
+import os
+from typing import Dict, Tuple
+from functools import partial
+import torch
+import torch.nn.functional as F
+from megatron.training import get_args, get_model
+from megatron.core import mpu, tensor_parallel
+from megatron.core.enums import ModelType
+from megatron.training.checkpointing import load_checkpoint
+from megatron.training.utils import average_losses_across_data_parallel_group
+from megatron.training.global_vars import set_args
+from mindspeed_llm.tasks.posttrain.base import BaseTrainer
+from mindspeed_llm.tasks.posttrain.sft.sft_trainer import SFTTrainer
+from mindspeed_llm.tasks.posttrain.utils import compute_log_probs
+
+IGNORE_INDEX = -100
+EOS_INDEX = 151643
+POS_INDEX = 151644
+NEG_INDEX = 151645
+
+class OPGTrainer(BaseTrainer):
+    """
+    A trainer class for Offline Policy Gradient.
+
+    This class provides methods for model initialize, computing losses and metrics, and training.
+    """    
+
+    def __init__(self):        
+        super().__init__()        
+
+    @staticmethod
+    def get_batch(data_iterator):
+        return SFTTrainer.get_batch(data_iterator)        
+
+    def forward_step(self, data_iterator, model):
+        """PG Forward training step.
+
+        Args:
+            data_iterator : Input data iterator
+            model (GPTModel): The GPT Model
+        """
+        # Get the batch.
+        self.timers('batch-generator', log_level=2).start()        
+        tokens, labels, loss_mask, attention_mask, position_ids = self.get_batch(
+            data_iterator)
+        self.timers('batch-generator').stop()
+
+        if tokens is not None:        
+            seq_len = tokens.shape[1]
+
+            # if seq_len % 2 == 0:
+            #     reward = 1
+            # else:
+            #     reward = -1
+
+            pad_num = (tokens[0,:] == EOS_INDEX).sum()
+            act_len = seq_len - pad_num
+            sign_index = tokens[0,act_len-1]
+
+            # if seq_len > 64000:
+            #     print(f"sign index: {sign_index} {tokens[0,act_len-2]} | seq len: {seq_len} | pad num: {pad_num}")
+
+            if sign_index == POS_INDEX:
+                reward = 1                
+            elif sign_index == NEG_INDEX:
+                reward = -1
+            else:
+                print(f"sign index: {sign_index} {tokens[0,act_len-2]} {tokens[0,act_len]} | seq len: {seq_len} | pad num: {pad_num}")
+                raise ValueError("Invalid sign index")
+        
+            tokens = tokens.clone()
+            tokens[0,act_len-1] = EOS_INDEX
+                                    
+            if labels is not None:
+                # labels = labels.clone()
+                labels[0,act_len-1] = IGNORE_INDEX
+                loss_mask[0,act_len-1] = 0
+            
+            attention_mask[0,0,:,act_len-1] = True
+
+            # if sign_index == 1:
+            #     tokens[0,act_len-1] = 0
+            #     tokens[0,act_len-2] = 1
+            # print(f"{tokens[-10:]} {tokens[0,act_len-1]} {tokens[0,act_len-2]} {pad_num}")
+            
+        #     print(f"seq_len {tokens.shape[1]} {seq_len} {attention_mask[0,0,0,:].float().sum()} {attention_mask[0,0,:,0].float().sum()} {attention_mask[0,0,-1,:].float().sum()} {attention_mask[0,0,:,-1].float().sum()} {attention_mask[0,0,:,-pad_num:].float().sum()} {attention_mask.shape}")
+        #     print(f"seq_len {tokens.shape[1]} {seq_len} {attention_mask[0,0,0,:].float().sum()} {attention_mask[0,0,:,0].float().sum()} {attention_mask[0,0,-1,:].float().sum()} {attention_mask[0,0,:,-1].float().sum()} {attention_mask[0,0,:,-pad_num:].float().sum()} {tokens.shape[1]*pad_num} {attention_mask.shape}")
+        #     print(attention_mask)
+
+        
+
+        # reward = 1
+        # if tokens[0,1000] % 2 == 0:
+        #     reward = 1
+        # else:
+        #     reward = -1
+
+        # if tokens is not None:            
+        #     len_0 = sum(tokens[0,:] == EOS_INDEX)
+        #     len_1 = sum(tokens[1,:] == EOS_INDEX)
+            
+        #     if len_0 < len_1:
+        #         tokens = tokens[0,:].unsqueeze(0)
+        #         attention_mask = attention_mask[0,:,:,:].unsqueeze(0)
+        #         reward = 1.0
+        #     elif len_0 > len_1:
+        #         tokens = tokens[1,:].unsqueeze(0)                
+        #         attention_mask = attention_mask[1,:,:,:].unsqueeze(0)
+        #         reward = -1.0
+        #     else:                
+        #         raise ValueError(f'len_0 and len_1 should not be equal. len_0: {len_0}, len_1: {len_1}')
+            
+        # loss_mask = None
+
+        # if labels is not None:
+            
+        #     if len_0 < len_1:                
+        #         labels = labels[0,:].unsqueeze(0)                                
+        #     elif len_0 > len_1:                
+        #         labels = labels[1,:].unsqueeze(0)                
+        #     else:
+        #         raise ValueError(f'len_0 and len_1 should not be equal. len_0: {len_0}, len_1: {len_1}')            
+        #     loss_mask = torch.where(labels == IGNORE_INDEX, 0, 1)
+        # print(loss_mask)
+                
+        output_tensor = model(tokens, position_ids, attention_mask,
+                              labels=labels, loss_mask=loss_mask)
+
+        return output_tensor, partial(self.loss_func, loss_mask, reward)
+    
+    def loss_func(self, input_tensor: torch.Tensor, reward: torch.float, output_tensor: torch.Tensor):
+        """Offline Policy Gradient Loss function.
+
+        Args:
+            input_tensor (torch.Tensor): The tensor with the labels (repeated in double)
+            output_tensor (torch.Tensor): The tensor with the Policy Model's Logits
+        """
+
+        args = get_args()
+        loss_mask = input_tensor
+        loss_mask = loss_mask[..., 1:].view(-1).float()
+        losses = output_tensor.float()
+        loss a= torch.sum(losses.view(-1) * loss_mask) / loss_mask.sum()
+        
+        # Check individual rank losses are not NaN prior to DP all-reduce.
+        if args.check_for_nan_in_loss_and_grad:
+            global_rank = torch.distributed.get_rank()
+            if loss.isnan():
+                raise ValueError(f'Rank {global_rank}: found NaN in local forward loss calculation. '
+                                 f'Device: {torch.cuda.current_device()}, node: {os.uname()[1]}')
+
+        # Reduce loss for logging.
+        averaged_loss = average_losses_across_data_parallel_group([loss])
+
+        metrics = {}        
+        metrics['reward'] = (-loss.detach().mean()).exp() * (reward + 1.0 + 1e-10)
+        metrics['lm loss'] = averaged_loss[0]
+
+        return loss * reward, metrics

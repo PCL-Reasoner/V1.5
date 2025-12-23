@@ -1,0 +1,11 @@
+python ./preprocess_data.py \
+    --input /home/yaolu/workspace/Datasets/prompt_cot_2/prompt_cot_2_opg.jsonl \
+    --tokenizer-type PretrainedFromHF \
+    --tokenizer-not-use-fast \
+    --tokenizer-name-or-path /pcl_shared_dpc/hfhub/models/Qwen/Qwen2.5-32B \
+    --output-prefix /home/yaolu/workspace/Datasets/mc/prompt_cot_2_opg/ \
+    --workers 4 \
+    --log-interval 1000 \
+    --handler-name AlpacaStylePairwiseHandler \
+    --prompt-type empty \
+    --map-keys '{"prompt":"question", "query":""}'

@@ -1,0 +1,11 @@
+python ./preprocess_data.py \
+    --input /home/yaolu/workspace/Datasets/hf/orca_rlhf.jsonl \
+    --tokenizer-type PretrainedFromHF \
+    --tokenizer-not-use-fast \
+    --tokenizer-name-or-path /pcl_shared_dpc/hfhub/models/Qwen/Qwen2.5-7B/ \
+    --output-prefix /home/yaolu/workspace/Datasets/mc/orca_pairwise/ \
+    --workers 4 \
+    --log-interval 1000 \
+    --handler-name AlpacaStylePairwiseHandler \
+    --prompt-type llama3 \
+    --map-keys '{"prompt":"question", "query":"", "system":"system"}'
