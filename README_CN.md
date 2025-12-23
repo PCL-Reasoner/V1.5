@@ -15,15 +15,9 @@ PCL-Reasoner-V1.5 是一个专为数学推理设计的 32B 参数大语言模型
 
 ## 开发指导
 
-### 1. 模型文件
+### 1. 训练代码
 
-PCL-Reasoner-V1.5基于PCL-Reasoner-V1进行微调后训练，训练流程基于MindSpeed-LLM框架实现，主要涉及的文件有：
-
-```python
-
-```
-
-
+PCL-Reasoner-V1.5基于PCL-Reasoner-V1进行微调后训练，训练流程基于MindSpeed-LLM框架实现，我们主要增加了一个`opg_trainer.py`，和对数据集的处理中，添加了`reward`关键字。为了方便开源社区复现，我们将整个训练代码打包放到当前目录`MindSpeed-LLM`下面。
 
 ### 2.环境及数据准备
 
@@ -34,13 +28,14 @@ PCL-Reasoner-V1.5基于PCL-Reasoner-V1进行微调后训练，训练流程基于
 | 固件&驱动 | 24.1.rc3.5 |
 | CANN      | 8.3.RC1    |
 | Python    | 3.10       |
+| MindSpeed | commit: 887c2d868 |
 
 
 #### 2.2 数据处理
 
 ##### 2.2.1 数据集下载
 
-要想进一步提升PCL-Reasoner-V1的能力，我们考虑从Nvidia公开的`Nemotron-Post-Training-Dataset-v1`中寻找具备一定难度的题目来做进一步的训练。
+在前期工作中，我们已经将PCL-Reasoner-V1的数学推理能力提升到了很高的水平。为了进一步优化模型性能，我们考虑从NVIDIA公开的Nemotron-Post-Training-Dataset-v1数据集中筛选具有一定难度的题目，用于后续的强化训练。
 
 | 数据集名称                    | 数据集链接                                                                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -53,60 +48,66 @@ PCL-Reasoner-V1.5基于PCL-Reasoner-V1进行微调后训练，训练流程基于
 ```bash
 # dir_path_to_parquet_files=Nemotron-Post-Training-Dataset-v1/data
 # output_dir_path=Nemotron-Post-Training-Dataset-v1/orig2jsonl
-cd PCL-Reasoner-V1.5/data_preprocess
+cd data_preprocess
 python convert_parquet2jsonl.py $dir_path_to_parquet_files $output_dir_path  --workers 128
 # 将数据集合并为一个jsonl文件
 cat $output_dir_path/*jsonl > Nemotron-Post-Training-Dataset-v1/all_samples.jsonl
 ```
 
-经过统计，我们发现在数据集`Nemotron-Post-Training-Dataset-v1`中，每道题被采用了多次，并且只保留了正确的COT样本。 因此我们可以据此计算每道题的准确率和COT长度。我们的数据预处理分为了3步：
+经过统计分析，我们发现在数据集Nemotron-Post-Training-Dataset-v1中，每道题被多次采用，且仅保留了正确的COT（Chain of Thought）样本。基于此现象，我们可以计算每道题的准确率和COT长度。整个数据预处理过程分为以下三个步骤：
 
-1. 我们统计了原始数据集相同题目的COT个数，发现大部分都处于1-16条，还有极少数的处于17-32条的区间。因此，我们判断原始数据集是对每个题目推理了16次，然后只保留了正确的COT样本。其中17-32条的样本可以理解为有少数的题目重复了。因此我们第一步就是去掉COT条数为16和32的样本，即全对的样本，保留推理部分正确的样本：
-   ```bash
-   cd PCL-Reasoner-V1.5/data_preprocess 
-   python split_all_right_and_partial_right.py all_samples.jsonl --complete_output all_right_samples.jsonl --incomplete_output partial_right_samples.jsonl --processes 128 
-   ```
-   原始数据集有2044407条COT数据，经过处理，我们得到了1189392条完全正确的COT数据（全对的题目过滤掉），和855015条部分正确的COT数据。
-
-2. 接下来，我们从855015条部分正确的COT数据中筛选出平均COT长度大于32K的COT数据：
+1. **分离完全正确与部分正确样本**：我们统计了原始数据集中相同题目的COT数量，发现大部分题目对应1-16条COT，极少数题目对应17-32条COT。据此判断，原始数据集对每道题进行了16次推理，然后仅保留了正确的COT样本。其中17-32条的样本可视为少量重复题目。因此，第一步是过滤掉COT数量为16和32的样本（即完全正确的样本），保留部分正确的样本：
     ```bash
-    cd PCL-Reasoner-V1.5/data_preprocess 
+    # cd data_preprocess 
+    python split_all_right_and_partial_right.py all_samples.jsonl --complete_output all_right_samples.jsonl --incomplete_output partial_right_samples.jsonl --processes 128 
+    ```
+   原始数据集包含2,044,407条COT数据，经过处理后，我们得到1,189,392条完全正确的COT数据（已过滤掉全对题目）和855,015条部分正确的COT数据。
+
+2. **筛选长COT样本**：从855,015条部分正确的COT数据中筛选出平均COT长度大于32K的样本：
+    ```bash
+    # cd data_preprocess 
     python static_and_filter_cot.py partial_right_samples.jsonl partial_right_samples_cot_filter.jsonl path_to_tokenizer --processes 128
     ```
-    经过处理，我们只得到了34K的题目，且平均COT长度大于32K。
+    处理后，我们得到约34K条题目，且平均COT长度均超过32K。
 
-3. 最后我们再从34K的COT中，找出唯一出现的题目:
+3. **提取唯一题目**：从34K条COT数据中提取首次出现的唯一题目：
    
    ```bash
-   cd PCL-Reasoner-V1.5/data_preprocess 
+   # cd data_preprocess 
    python extract_first_problem.py partial_right_samples_cot_filter.jsonl partial_right_problem.jsonl
    ```
-   经过处理，我们最终得到了6K的题目。
+   最终处理后，我们得到约6K条唯一的题目。
 
 
 ##### 2.2.3 模型采样
 
-我们得到这6K数据集后，利用`PCL-Reasoner-V1`模型进行采样，每道题采样8次，生成推理结果。采样的配置如下：
+获得6K数据集后，我们使用`PCL-Reasoner-V1`模型进行采样，每道题采样8次，生成推理结果。采样配置跟后面的评估一致：
 
-xxx
+| 采样超参       | 取值                                       |
+| -------------- | ------------------------------------------ |
+| temperature    | 0.6                                        |
+| top_k         | 40                                         |
+| top_p         | 0.95                                       |
+| max_model_len    | 131072                                     |
+| system_prompt_type | amthinking |
 
 经过采样，我们得到了48K的COT数据。
 
-#### 2.2.4 采样COT正确性评估
+##### 2.2.4 采样COT正确性评估
 
-我们在以往的训练经验中发现，采用`math_verify`并不能很好的对COT回答的正确性进行评估。对于越是复杂的数学题，其它答案如果采用规则进行匹配，那么就会有较大的误判。因此，我们采用`Qwen3-32B`模型来对COT的回答正确性进行评估。具体思路如下：
+基于以往训练经验，我们发现传统的math_verify方法无法有效评估COT回答的正确性。对于复杂的数学题，使用规则匹配的方式容易产生较大误判。因此，我们采用Qwen3-32B模型对COT回答的正确性进行评估，具体思路如下：
 
-1. 为`Qwen3-32B`模型专门写一个prompt，用于判断COT的最后里面包含的答案是否与题目提供的ground truth一致；
-2. 部署`Qwen3-32B`模型对48K题目进行推理；
-3. 根据`Qwen3-32B`模型对COT的最后300个token里面包含的答案和题目提供的ground truth进行匹配从然判断该条COT是否正确。
+1. 为`Qwen3-32B`模型设计专门的prompt，用于判断COT中包含的最终答案是否与题目提供的`ground truth`一致；
+2. 部署`Qwen3-32B`模型对48K题目进行推理评估；
+3. 根据`Qwen3-32B`模型对COT最后300个token中包含的答案与题目提供的`ground truth`进行匹配，从而判断该条COT是否正确。
 
-prompt模板如下：
+评估prompt模板如下：
 
 ```bash
-As a math scoring expert, given a standard answer, and a candidate answer, you need to compare whether the standard answer and the candidate answer are consistent. If they are consistent, return 1; if not, return 0. Remember the returned value should always be put in the \\boxed{}.\nHere are a few points to note:\n1. For the candidate answer, only consider the content inside \\boxed{}, ignoring any other text or error. If no \\boxed{} found, return 0 directly.\n2. If the standard answer and the candidate answer are different but mathematically equivalent, return 1.\n3. For answers involving decimals, if most digits are the same and only the last one or two digits differ, you may considerably return 1.\n4. For all other cases where the standard answer and the candidate answer do not match, return 0.\nHere is a task example:\n<Standard Answer Begin>\n{Standard answer}\n<Standard Answer End>\n<Candidate Answer Begin>\n{Candidate answer}\n<Candidate Answer End>\nPlease put your return value (0 or 1) as required above in the \\boxed{} without any explanation or description.\n<|im_end|>
+As a math scoring expert, given a standard answer, and a candidate answer, you need to compare whether the standard answer and the candidate answer are consistent. If they are consistent, return 1; if not, return 0. Remember the returned value should always be put in the \\boxed{}.\nHere are a few points to note:\n1. For the candidate answer, only consider the content inside \\boxed{}, ignoring any other text or error. If no \\boxed{} found, return 0 directly.\n2. If the standard answer and the candidate answer are different but mathematically equivalent, return 1.\n3. For answers involving decimals, if most digits are the same and only the last one or two digits differ, you may considerably return 1.\n4. For all other cases where the standard answer and the candidate answer do not match, return 0.\nHere is a task example:\n<Standard Answer Begin>\n{Standard answer}\n<Standard Answer End>\n<Candidate Answer Begin>\n{Candidate answer}\n<Candidate Answer End>\nPlease put your return value (0 or 1) as required above in the \\boxed{} without any explanation or description.
 ```
 
-最终，我们得到了22990条正样本和25522条负样本。
+最终，我们获得了22,990条正样本和25,522条负样本。
 
 #### 2.3 模型权重准备
 
@@ -124,11 +125,11 @@ As a math scoring expert, given a standard answer, and a candidate answer, you n
 
 ##### 3.1.1 下载HuggingFace模型权重
 
-下载 HuggingFace 上的 Qwen25-32B-Base 模型权重到本地。
+下载 HuggingFace 上的 PCL-Reasoner/V1 模型权重到本地。
 
 ```bash
 # download  model
-huggingface-cli download  Qwen/Qwen2.5-32B-Base  --local-dir ~/local/Qwen/Qwen2.5-32B-Base
+huggingface-cli download  PCL-Reasoner/V1  --local-dir ~/local/PCL-Reasoner/V1
 ```
 
 ##### 3.1.2 转换模型权重格式
@@ -137,7 +138,9 @@ MindSpeed-LLM框架基于MindSpeed，读取权重格式为mcore格式，在训�
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
+hf_model_path=/path/to/hf/model
 # 设置需要的权重转换参数
+cd MindSpeed-LLM
 python convert_ckpt.py \
        --use-mcore-models \
        --model-type GPT \
@@ -146,11 +149,11 @@ python convert_ckpt.py \
        --target-tensor-parallel-size 8 \
        --target-pipeline-parallel-size 4 \
        --add-qkv-bias \
-       --load-dir ~/local/Qwen/Qwen2.5-32B \
-       --save-dir ~/local/Qwen/mcore/qwen2.5_32b/ \
-       --tokenizer-model ~/local/Qwen/Qwen2.5-32B/tokenizer.json \
+       --load-dir $hf_model_path \
+       --save-dir ${hf_model_path}/mcore_tp8_pp4/ \
+       --tokenizer-model $hf_model_path/tokenizer.json \
        --model-type-hf llama2 \
-       --params-dtype bf16 # --num-layer-list 11, 13, 19, 21 参数根据需要添加
+       --params-dtype bf16 
 ```
 
 ###### 参数介绍
@@ -179,26 +182,47 @@ python convert_ckpt.py \
 # 请按照您的真实环境修改 set_env.sh 路径
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
+hf_model_path=/path/to/hf/model
 python preprocess_data.py \
-	--input /home/ma-user/work/datasets/open-web-math/open-web-math/data/ \
-	--tokenizer-name-or-path /home/ma-user/work/models/Qwen/Qwen2.5-7B/ \
-	--tokenizer-type PretrainedFromHF \
-	--handler-name GeneralPretrainHandler \
-	--cache-dir /home/ma-user/work/datasets/cache_dir \
-	--output-prefix /home/ma-user/work/datasets/mindspeed/open-web-math \
-	--json-keys text \
-	--workers 16  \
-	--n-subs 16 \
-	--log-interval 1000
+    --input /path/to/opg_train_remove_all_wrong_cot_lt_48k.jsonl \
+    --tokenizer-type PretrainedFromHF \
+    --tokenizer-not-use-fast \
+    --tokenizer-name-or-path $hf_model_path \
+    --output-prefix /path/to/mc_lt_48k/ \
+    --workers 64 \
+    --log-interval 1000 \
+    --handler-name AlpacaStyleInstructionHandler \
+    --prompt-type empty \
+    --cache-dir /path/to/tmp/ \
+    --map-keys '{"prompt":"prompt", "query":"", "response":"response", "reward":"reward"}'
 ```
 
+#####
 
+- `input`: 输入jsonl文件路径
+- `tokenizer-type`: 输入的tokenizer类型
+- `tokenizer-name-or-path`: 输入的tokenizer路径
+- `output-prefix`: 输出文件路径
+- `workers`: 数据处理线程数
+- `log-interval`: 日志输出样本数间隔
+- `handler-name`: 选择的`data handler`名称
+- `prompt-type`: 输入的prompt类型，empty表示无prompt（说明原始prompt里面已经包含了`chat template`)
+- `cache-dir`: 缓存目录
+- `map-keys`: 输入的jsonl文件字段映射
 
 
 #### 3.3 训练配置
 
+我们采用了一种受启发的训练策略。全局批大小（global batch size）设为 128，学习率从$6×10^{−5}$按照余弦衰减调度降至 $1×10^{−7}$，并设置了 0.05 的预热比例（warm-up ratio）。AdamW 优化器的动量参数配置为 $\beta_1=0.9$ 和 $\beta_2=0.95$。训练在 16 台 Atlas 910C SuperPoD 节点（每台包含 8 个芯片）上进行。整个微调过程共进行了 4 个 epoch，耗时约 116 小时。相应的训练损失曲线如图 \ref{fig:loss} 所示。
+
+为了最大化计算效率，我们在监督微调阶段启用了数据打包（data packing）功能。该功能允许将每个批次中长度各异的样本拼接合并，填入预设的序列长度（48K tokens）中。通过将多个短序列合并为一个长序列，有效消除了因序列填充（padding）带来的冗余计算，显著加快了训练速度。
 
 #### 3.4 启动训练
+
+训练流程分为三步：
+
+1. 激活环境：`source /path/to/set_env.sh`
+2. 启动训练：`cd MindSpeed-LLM; bash scripts/lauch_multi_nodes.sh node_list.txt`
 
 ### 4. 评测流程：
 

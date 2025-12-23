@@ -56,15 +56,10 @@ if [ ${#NODE_HOSTS[@]} -eq 0 ]; then
 fi
 
 # --- 训练相关参数，来自你原始脚本的配置 ---
-PROJECT_DIR="/home/yaolu/workspace/MindSpeed-LLM"
-# DATA_PATH="/home/yaolu/workspace/Datasets/mc/am-thinking-dpo"
-# DATA_PATH="/home/yaolu/workspace/Datasets/mc/prompt_cot_2_opg/"
-# DATA_PATH="/home/yaolu/workspace/Datasets/opg_nv_community/mc_remove_all_wrong/"
-DATA_PATH="/home/yaolu/workspace/Datasets/opg_nv_community/mc_lt_48k/"
-# DATA_PATH="/home/yaolu/workspace/Datasets/v1_partial_right_problem_1127/positive_samples"
-TOKENIZER_PATH="/home/yaolu/workspace/Models/hf/Qwen2.5-32B"
-# CKPT_LOAD_DIR="/home/yaolu/workspace/Models/Models/hf_sft_packing_0703_step6476/mcore_tp8_pp2"
-CKPT_LOAD_DIR="/pcl_shared_dpc/fdd/models/hf_sft_packing_0703_step6476/mcore_tp8_pp4"
+PROJECT_DIR="/path/to/MindSpeed-LLM"
+DATA_PATH="/path/to/converted_dataset/"
+TOKENIZER_PATH="/path/to/PCL-Reasoner/V1"
+CKPT_LOAD_DIR="/path/to/mcore/format/weights"
 
 # --- 分布式配置 ---
 MASTER_ADDR="${NODE_HOSTS[0]}"
