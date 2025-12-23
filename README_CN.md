@@ -19,6 +19,11 @@ PCL-Reasoner-V1.5 是一个专为数学推理设计的 32B 参数大语言模型
 
 PCL-Reasoner-V1.5基于PCL-Reasoner-V1进行微调后训练，训练流程基于MindSpeed-LLM框架实现，主要涉及的文件有：
 
+```python
+
+```
+
+
 
 ### 2.环境及数据准备
 
@@ -117,12 +122,78 @@ As a math scoring expert, given a standard answer, and a candidate answer, you n
 
 #### 3.1 模型权重转换
 
-MindSpeed-LLM框架基于MindSpeed，读取权重格式为mcore格式，因此需要转换权重格式。
+##### 3.1.1 下载HuggingFace模型权重
+
+下载 HuggingFace 上的 Qwen25-32B-Base 模型权重到本地。
+
+```bash
+# download  model
+huggingface-cli download  Qwen/Qwen2.5-32B-Base  --local-dir ~/local/Qwen/Qwen2.5-32B-Base
+```
+
+##### 3.1.2 转换模型权重格式
+
+MindSpeed-LLM框架基于MindSpeed，读取权重格式为mcore格式，在训练前，需要将 Hugging Face 权重转换成Mcore格式。脚本启动命令可以用bash启动，可根据真实情况配置脚本，启动命令和配置参数如下：
+```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+# 设置需要的权重转换参数
+python convert_ckpt.py \
+       --use-mcore-models \
+       --model-type GPT \
+       --load-model-type hf \
+       --save-model-type mg \
+       --target-tensor-parallel-size 8 \
+       --target-pipeline-parallel-size 4 \
+       --add-qkv-bias \
+       --load-dir ~/local/Qwen/Qwen2.5-32B \
+       --save-dir ~/local/Qwen/mcore/qwen2.5_32b/ \
+       --tokenizer-model ~/local/Qwen/Qwen2.5-32B/tokenizer.json \
+       --model-type-hf llama2 \
+       --params-dtype bf16 # --num-layer-list 11, 13, 19, 21 参数根据需要添加
+```
+
+###### 参数介绍
+
+- `use-mcore-models`：启用 MCore 模型；
+- `model-type`：指定模型类型，如 GPT;
+- `load-model-type`：指定加载模型的类型，如 hf（Hugging Face）;
+- `save-model-type`：指定保存模型的类型，如 mg;
+- `target-tensor-parallel-size`：设置目标张量并行大小；
+- `target-pipeline-parallel-size`：设置目标流水线并行大小；
+- `add-qkv-bias`：是否进行 QKV 偏置；
+- `load-dir`：加载 Hugging Face 权重的路径；
+- `save-dir`：保存转换后权重的路径；
+- `tokenizer-model`：分词器模型文件的路径；
+- `model-type-hf`：指定 Hugging Face 模型类型，如 llama2;
+- `params-dtype`：指定参数的数据类型，如 bf16。
+
 
 
 #### 3.2 数据集转换
 
 经过推理，我们得到了48K的COT数据，数据格式为jsonl格式，包含问题、推理结果和推理结果对应的COT。需要将其转换为MindSpeed-LLM的可读格式：
+
+
+```bash
+# 请按照您的真实环境修改 set_env.sh 路径
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+python preprocess_data.py \
+	--input /home/ma-user/work/datasets/open-web-math/open-web-math/data/ \
+	--tokenizer-name-or-path /home/ma-user/work/models/Qwen/Qwen2.5-7B/ \
+	--tokenizer-type PretrainedFromHF \
+	--handler-name GeneralPretrainHandler \
+	--cache-dir /home/ma-user/work/datasets/cache_dir \
+	--output-prefix /home/ma-user/work/datasets/mindspeed/open-web-math \
+	--json-keys text \
+	--workers 16  \
+	--n-subs 16 \
+	--log-interval 1000
+```
+
+
+
 
 #### 3.3 训练配置
 
@@ -131,19 +202,144 @@ MindSpeed-LLM框架基于MindSpeed，读取权重格式为mcore格式，因此�
 
 ### 4. 评测流程：
 
+我们使用 [LLMEval](https://gitee.com/jianzhnie/LLMEval) 对模型进行评测， LLMEval 是由我们团队开发的主要针对大模型推理进行评测的工具，支持 vllm 和 sglang 两种推理后端， 支持多种评测数据集， 已经在 Ascend 环境复现了多个开源推理模型的效果。详情请参考 [LLMEval 使用教程](https://gitee.com/jianzhnie/LLMEval)。
+
+#### 4.1 评估环境配置
+
+请参考 [LLMEval 使用教程](https://gitee.com/jianzhnie/LLMEval) 中的环境配置章节进行环境搭建。
+
+
+#### 4.2 开始评测
+
+##### 步骤 1：启动 vLLM 服务器
+
+```bash
+source set_env.sh
+
+model_path="/path/to/pcl_reasoner_v1"
+model_name="PCL-Reasoner-v1"
+
+num_gpus=8
+max_model_len=131072  # ✅ 支持 128k 上下文
+gpu_memory_utilization=0.9  # ✅ 提高内存利用率
+
+python -m vllm.entrypoints.openai.api_server \
+    --model $model_path \
+    --trust-remote-code \
+    --served-model-name $model_name \
+    --tensor-parallel-size $num_gpus \
+    --gpu-memory-utilization $gpu_memory_utilization \
+    --max-model-len $max_model_len  \
+    --enforce-eager \
+    --port 8090
+```
+
+根据可用设备调整 `tensor_parallel_size` 参数。
+
+
+##### 步骤 2：提交推理任务
+
+启动 vLLM 服务后，运行推理脚本生成响应, 并将结果保存到指定的输出文件中。
+
+```bash
+source set_env.sh
+
+set -euo pipefail
+
+# --- Configuration ---
+output_dir="./output/PCL-Reasoner-v1"
+model_name="PCL-Reasoner-v1"
+
+base_url="http://127.0.0.1:8090/v1"
+n_samples=64  # Default sample size for aime24 and aime25
+
+# Create output directory if it doesn't exist
+mkdir -p "${output_dir}"
+
+# --- Run Inference Tasks ---
+# aime25 (repeated sample 64 times)
+python ./llmeval/vllm/online_server.py \
+    --input_file "./data/aime25.jsonl" \
+    --input_key "prompt" \
+    --output_file "${output_dir}/aime25_bz${n_samples}.jsonl" \
+    --base_url "${base_url}" \
+    --model_name "${model_name}" \
+    --n_samples "${n_samples}" \
+    --temperature 0.6  \
+    --system_prompt_type amthinking \
+    --max_workers 64
+
+# aime24 (repeated sample 64 times)
+python ./llmeval/vllm/online_server.py \
+    --input_file "./data/aime24.jsonl" \
+    --input_key "prompt" \
+    --output_file "${output_dir}/aime24_bz${n_samples}.jsonl" \
+    --base_url "${base_url}" \
+    --model_name "${model_name}" \
+    --n_samples "${n_samples}" \
+    --temperature 0.6  \
+    --system_prompt_type amthinking \
+    --max_workers 64
+
+echo "🎉 All inference tasks completed successfully!"
+```
+
+**注意：** 我们使用重复采样来减少评估方差，但可能需要较长时间才能完成（根据设备情况可能超过8小时）。
+
 
 我们采用的评测超参如下所示：
 
 | 采样超参       | 取值                                       |
 | -------------- | ------------------------------------------ |
 | temperature    | 0.6                                        |
-| top\_k         | 40                                         |
-| top\_p         | 0.95                                       |
-| max\_tokens    | 129024                                     |
-| chat\_template | `./pcl_reasoner_v1/eval/am_thinking.jinja` |
+| top_k         | 40                                         |
+| top_p         | 0.95                                       |
+| max_model_len    | 131072                                     |
+| system_prompt_type | amthinking |
+
+##### 步骤 3：评分
+
+完成推理后，使用以下命令进行评分：
+
+```bash
+source set_env.sh
+
+set -euo pipefail
+
+# --- Configuration ---
+output_dir="./output/PCL-Reasoner-v1"
+n_samples=64 # Default sample size for aime24 and aime25
+
+# Evaluation output directory
+reval_dir="${output_dir}/eval_score"
+
+# Create evaluation directory if it doesn't exist
+mkdir -p "${reval_dir}"
+
+# --- Evaluate Each Task ---
+# Evaluate aime24
+python ./llmeval/tasks/math_eval/eval.py \
+    --input_path "${output_dir}/aime24_bz${n_samples}.jsonl" \
+    --cache_path "${reval_dir}/aime24_bz${n_samples}.jsonl" \
+    --task_name "math_opensource/aime24" \
+    --max_workers 16 \
+    > "${reval_dir}/aime24_bz${n_samples}_res_result.txt"
+
+# Evaluate aime25
+python ./llmeval/tasks/math_eval/eval.py \
+    --input_path "${output_dir}/aime25_bz${n_samples}.jsonl" \
+    --cache_path "${reval_dir}/aime25_bz${n_samples}.jsonl" \
+    --task_name "math_opensource/aime25" \
+    --max_workers 16 \
+    > "${reval_dir}/aime25_bz${n_samples}_res_result.txt"
+
+echo "🎯 Evaluation completed successfully!"
+```
+
+
+####  4.3 评测结果
 
 我们在AIME24/AIME25评测结果详见下表数据。为确保评估准确性，我们采用Avg@32指标（平均32次采样）进行了评测：
-
 
 <!-- 表格基础样式（可选添加） -->
 
@@ -265,4 +461,3 @@ MindSpeed-LLM框架基于MindSpeed，读取权重格式为mcore格式，因此�
     <td>84.2</td>
   </tr>
 </table>
-
