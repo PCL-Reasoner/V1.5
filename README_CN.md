@@ -206,7 +206,29 @@ python preprocess_data.py \
 
 #### 4.1 评估环境配置
 
-请参考 [LLMEval 使用教程](https://gitee.com/jianzhnie/LLMEval) 中的环境配置章节进行环境搭建。
+#### 4.1.1 安装 vllm 和 vllm-ascend
+
+请参考[vllm 文档](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) 和 [vllm-ascend 文档](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) 安装 vllm 和 vllm-ascend 环境。
+
+```bash
+# Install vllm-project/vllm from pypi
+pip install vllm==0.9.1
+
+# Install vllm-project/vllm-ascend from pypi.
+pip install vllm-ascend==0.9.1
+```
+
+#### 4.1.2 配置 llmeval 环境
+
+```bash
+# Clone the LLMEval repository
+git clone https://gitee.com/jianzhnie/LLMEval.git
+
+# Navigate to the LLMEval directory
+cd LLMEval
+# Install LLMEval in editable mode
+pip install -e .
+```
 
 
 #### 4.2 开始评测
@@ -428,36 +450,15 @@ echo "🎯 Evaluation completed successfully!"
   </tr>
 </table>
 
-> *(注：模型在AIME24/25评测集上的生成结果文件已同步上传至 `pcl_reasoner_v1/eval/eval_res`目录，供开发者用于模型验证与效果比对参考）*
- 
+> *(注：模型在AIME24/25评测集上的生成结果文件已同步上传至 `PCL-Reasoner-V1.5/eval_result`目录，供开发者用于模型验证与效果比对参考）*
 
-另外，我们也针对评测时不同模型回答长度统计正确率，可以看出AIME24/25评测集对回答长度要求较高，而且较为简单的AIME24上，64K tokens的回答长度可以满足，而较为难的AIME25上则需要回答长度长达128K tokens：
+## Ciation
 
-<style>
-  table { border-collapse: collapse; width: 100%; margin-left: auto;margin-right: auto;}
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-</style>
-
-<table>
-  <tr>
-    <th>回答长度</th>
-    <th>16k</th>
-    <th>32k</th>
-    <th>64k</th>
-    <th>128k</th>
-  </tr>
-  <tr>
-    <td>AIME24</td>
-    <td>42.0</td>
-    <td>77.9</td>
-    <td>85.7</td>
-    <td>85.7</td>
-  </tr>
-  <tr>
-    <td>AIME25</td>
-    <td>33.4</td>
-    <td>75.6</td>
-    <td>83.9</td>
-    <td>84.2</td>
-  </tr>
-</table>
+```bibtex
+@article{PCL-Reasoner-v1.5,
+  title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning},
+  author={Yao Lu, Deng Dong Fan, Jianzheng Nie, et al.},
+  journal={arXiv preprint arXiv:2405.14524},
+  year={2024}
+}
+```
