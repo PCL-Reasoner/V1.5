@@ -19,7 +19,7 @@ To foster open collaboration and practical application, we have fully open-sourc
 
 ### 1. Training Code
 
-PCL-Reasoner-V1.5 is fine-tuned from PCL-Reasoner-V1 using the MindSpeed-LLM framework. We introduced a new trainer module `opg_trainer.py` and enhanced the dataset preprocessing pipeline to include a `reward` field. To facilitate reproducibility within the open-source community, we have packaged the complete training code under the `MindSpeed-LLM` directory in this repository.
+PCL-Reasoner-V1.5 is trained from PCL-Reasoner-V1 using the MindSpeed-LLM framework. We introduced a new trainer module `opg_trainer.py` and enhanced the dataset preprocessing pipeline to include a `reward` field. To facilitate reproducibility within the open-source community, we have packaged the complete training code under the `MindSpeed-LLM` directory in this repository.
 
 ### 2. Environment and Data Preparation
 
@@ -132,11 +132,11 @@ After evaluation:
 
 Download the base model **PCL-Reasoner-V1** from Hugging Face:
 
-| **Model Name**          | **Link**                                                                           |
+| Model Name          | Link                                                                           |
 | ----------------- | ---------------------------------------------------------------------------------- |
 | PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
 
-### 3. **Training Procedure**
+### 3. Training Procedure
 
 Training is based on the **MindSpeed-LLM** framework and includes the following steps:
 
