@@ -10,8 +10,9 @@ PCL-Reasoner-V1.5 attains **9x.x% on AIME 2024** and **9x.x% on AIME 2025**, sig
 We have fully open-sourced the **model weights**, **dataset**, and **training code** to foster transparency, reproducibility, and community innovation. Follow the tutorial below to deploy, evaluate, or extend PCL-Reasoner-V1.5 in your own research!
 
 ## Code  
-[GitHub Repository](https://github.com/your-org/XXX)
-[OpenI Project Page](https://openi.pcl.ac.cn/your-org/XXX)
+
+[GitHub Repository](https://github.com/PCL-Reasoner/V1.5)
+[OpenI Project Page](https://openi.pcl.ac.cn/PCL-Reasoner/V1.5)
 
 ## Evaluation  
 All results are reported using the **Avg@32 metric** (average accuracy over 32 independent sampling attempts per problem), ensuring robust and fair comparison.
