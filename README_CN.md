@@ -23,12 +23,13 @@ PCL-Reasoner-V1.5基于PCL-Reasoner-V1进行微调后训练，训练流程基于
 
 #### 2.1 安装环境：
 
-| 软件      | 版本       |
-| --------- | ---------- |
-| 固件&驱动 | 24.1.rc3.5 |
-| CANN      | 8.3.RC1    |
-| Python    | 3.10       |
-| MindSpeed | commit: 887c2d868 |
+| 软件      | 版本                 |
+| --------- | ----------        |
+| 固件&驱动 | 24.1.rc3.5        |
+| CANN      | 8.3.RC1           |
+| Python    | 3.10              |
+| vllm-ascend   | 0.9.1          |
+| MindSpeed-LLM | commit: 887c2d868 |
 
 
 #### 2.2 数据处理
@@ -103,8 +104,21 @@ cat $output_dir_path/*jsonl > Nemotron-Post-Training-Dataset-v1/all_samples.json
 
 评估prompt模板如下：
 
-```bash
-As a math scoring expert, given a standard answer, and a candidate answer, you need to compare whether the standard answer and the candidate answer are consistent. If they are consistent, return 1; if not, return 0. Remember the returned value should always be put in the \\boxed{}.\nHere are a few points to note:\n1. For the candidate answer, only consider the content inside \\boxed{}, ignoring any other text or error. If no \\boxed{} found, return 0 directly.\n2. If the standard answer and the candidate answer are different but mathematically equivalent, return 1.\n3. For answers involving decimals, if most digits are the same and only the last one or two digits differ, you may considerably return 1.\n4. For all other cases where the standard answer and the candidate answer do not match, return 0.\nHere is a task example:\n<Standard Answer Begin>\n{Standard answer}\n<Standard Answer End>\n<Candidate Answer Begin>\n{Candidate answer}\n<Candidate Answer End>\nPlease put your return value (0 or 1) as required above in the \\boxed{} without any explanation or description.
+```text
+As a math scoring expert, given a standard answer, and a candidate answer, you need to compare whether the standard answer and the candidate answer are consistent. If they are consistent, return 1; if not, return 0. Remember the returned value should always be put in the \boxed{}.
+Here are a few points to note:
+1. For the candidate answer, only consider the content inside \boxed{}, ignoring any other text or error. If no \boxed{} found, return 0 directly.
+2. If the standard answer and the candidate answer are different but mathematically equivalent, return 1.
+3. For answers involving decimals, if most digits are the same and only the last one or two digits differ, you may considerably return 1.
+4. For all other cases where the standard answer and the candidate answer do not match, return 0.
+Here is a task example:
+<Standard Answer Begin>
+{Standard answer}
+<Standard Answer End>
+<Candidate Answer Begin>
+{Candidate answer}
+<Candidate Answer End>
+Please put your return value (0 or 1) as required above in the \boxed{} without any explanation or description.
 ```
 
 最终，我们获得了22,990条正样本和25,522条负样本。
