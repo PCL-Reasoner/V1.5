@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # 数据准备
-models = ['PCL-Reasoner-V1', 'Qwen3-32B', 'QwQ-32B', 'R1-Distill-32B', 'Skywork-OR1-32B', 'AM-Thinking-v1']
-aime_2024 = [85.7, 81.4, 79.5, 72.6, 82.2, 85.3]
-aime_2025 = [84.2, 72.9, 69.5, 49.6, 73.3, 74.4]
+models = ['PCL-Reasoner-V1.5', 'PCL-Reasoner-V1', 'Qwen3-32B', 'QwQ-32B', 'Skywork-OR1-32B', 'AM-Thinking-v1']
+aime_2024 = [92.0, 85.7, 81.4, 79.5, 82.2, 85.3]
+aime_2025 = [90.6, 84.2, 72.9, 69.5, 73.3, 74.4]
 
 # 创建图形
 fig, ax = plt.subplots(figsize=(12, 6))
@@ -14,8 +14,8 @@ x = np.array([0, 1])  # 两个年份
 bar_width = 0.12
 
 # 颜色和图案设置
-colors = ['#8bc34a', '#b8d8c3', '#9bc9a9', '#5f8d95', '#2e5f6c', '#2b3d4b']
-hatches = ['/', '', '', '', '', '']  # 只有 PCL-Reasoner-V1 用斜线
+colors = ['#ffcc00', '#8bc34a', '#b8d8c3', '#9bc9a9', '#2e5f6c', '#2b3d4b']  # 新颜色放在首位
+hatches = ['/', '/', '', '', '', '']  # 第一个和第二个模型都使用斜线图案
 
 # 绘制柱子
 for i in range(len(models)):
@@ -38,10 +38,10 @@ for i in range(len(models)):
 # 设置坐标轴
 # ax.set_ylabel('Accuracy', fontsize=12, fontweight='bold')
 ax.set_ylabel('Accuracy', fontsize=15)
-ax.set_ylim(45, 102)
-ax.set_yticks(range(50, 102, 10))
+ax.set_ylim(65, 102)
+ax.set_yticks(range(70, 102, 10))
 # ax.set_yticklabels([f'{i}%' for i in range(45, 101, 10)], fontweight='bold')
-ax.set_yticklabels([f'{i}%' for i in range(50, 102, 10)], fontsize=15)
+ax.set_yticklabels([f'{i}%' for i in range(70, 102, 10)], fontsize=15)
 ax.set_xticks(x)
 # ax.set_xticklabels(['AIME 2024', 'AIME 2025'], fontsize=15, fontweight='bold')
 ax.set_xticklabels(['AIME 2024', 'AIME 2025'], fontsize=15)
