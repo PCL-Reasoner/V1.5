@@ -1,5 +1,7 @@
 # **PCL-Reasoner-V1.5 数学推理模型**
 
+中文文档 | [English](README_EN.md)
+
 ## 模型概览
 
 PCL-Reasoner-V1.5 是一个专为数学推理设计的 32B 参数大语言模型。该模型基于 Qwen2.5-32B-Base 构建，通过监督微调（Supervised Fine-Tuning, SFT）与强化学习（Reinforcement Learning, RL）进行训练。我们方法的一项关键创新在于采用了离线强化学习（Offline RL），相较于传统的在线强化学习方法，显著提升了训练效率。
