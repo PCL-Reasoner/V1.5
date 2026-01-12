@@ -5,8 +5,8 @@
 PCL-Reasoner-V1.5 是一个专为数学推理设计的 32B 参数大语言模型。该模型基于 Qwen2.5-32B-Base 构建，通过监督微调（Supervised Fine-Tuning, SFT）与强化学习（Reinforcement Learning, RL）进行训练。我们方法的一项关键创新在于采用了离线强化学习（Offline RL），相较于传统的在线强化学习方法，显著提升了训练效率。
 在公开数据集上，PCL-Reasoner-V1.5 在 32B 规模模型中表现卓越：
 
-- 在 AIME 2024 基准测试中达到 91.3% 的平均准确率
-- 在 AIME 2025 基准测试中达到 91.0% 的平均准确率
+- 在 AIME 2024 基准测试中达到 90.9% 的平均准确率
+- 在 AIME 2025 基准测试中达到 85.7% 的平均准确率
 
 所有实验均在华为昇腾（Ascend）NPU 上完成，仅使用公开可用的数据集。
 
@@ -129,7 +129,7 @@ As a math scoring expert, given a standard answer, and a candidate answer, you n
 
 ```bash
 # download  model
-huggingface-cli download  PCL-Reasoner/V1  --local-dir ~/local/PCL-Reasoner/V1
+huggingface-cli download  PCL-Reasoner/V1  --local-dir ~/local_dir/PCL-Reasoner/V1
 ```
 
 ##### 3.1.2 转换模型权重格式
@@ -138,7 +138,7 @@ MindSpeed-LLM框架基于MindSpeed，读取权重格式为mcore格式，在训�
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-hf_model_path=/path/to/hf/model
+hf_model_path=~/local_dir/PCL-Reasoner/V1
 # 设置需要的权重转换参数
 cd MindSpeed-LLM
 python convert_ckpt.py \
@@ -224,6 +224,28 @@ python preprocess_data.py \
 1. 激活环境：`source /path/to/set_env.sh`
 2. 启动训练：`cd MindSpeed-LLM; bash scripts/lauch_multi_nodes.sh node_list.txt`
 
+
+#### 3.5 模型权重转成 hf 格式
+
+训练完成，权重需要从Megatron-LM 格式转换到 HuggingFace 标准格式，确保可以在 HuggingFace 环境下继续进行训练和推理。下面提mg-hf权重转换脚本：
+
+```bash
+python convert_ckpt.py \
+    --model-type GPT \
+    --load-model-type mg \
+    --save-model-type hf \
+    --model-type-hf llama2 \
+    --use-mcore-models \
+    --load-dir ./model_weights/sft_pcl_model/ \
+    --target-tensor-parallel-size 1 \
+    --target-pipeline-parallel-size 1 \
+    --save-dir ~/local_dir/PCL-Reasoner/V1/  # <-- 需要填入原始HF模型路径，新权重会存于./local_dir/PCL-Reasoner/V1/mg2hf
+```
+注意： 转到Huggingface权重必须设置--target-tensor-parallel-size = 1、--target-pipeline-parallel-size = 1。
+
+转换完成后，新的 HuggingFace 格式权重会存储在 `~/local_dir/PCL-Reasoner/V1/mg2hf` 目录下, 然后就可以使用 vllm、sglang、huggingface 框架进行加载和推理。
+
+
 ### 4. 评测流程：
 
 我们使用 [LLMEval](https://gitee.com/jianzhnie/LLMEval) 对模型进行评测， LLMEval 是由我们团队开发的主要针对大模型推理进行评测的工具，支持 vllm 和 sglang 两种推理后端， 支持多种评测数据集， 已经在 Ascend 环境复现了多个开源推理模型的效果。详情请参考 [LLMEval 使用教程](https://gitee.com/jianzhnie/LLMEval)。
@@ -262,7 +284,7 @@ pip install -e .
 ```bash
 source set_env.sh
 
-model_path="/path/to/pcl_reasoner_v1"
+model_path="~/local_dir/PCL-Reasoner/V1"
 model_name="PCL-Reasoner-v1"
 
 num_gpus=8
@@ -439,7 +461,7 @@ echo "🎯 Evaluation completed successfully!"
   </tr>
   <!-- 合并行表头 32B -->
   <tr>
-    <th rowspan="7">32B</th>
+    <th rowspan="9">32B</th>
   </tr>
   <!-- 32B 组数据行 -->
   <tr>
@@ -468,9 +490,19 @@ echo "🎯 Evaluation completed successfully!"
     <td><span style="color:grey">74.4</span></td>
   </tr>
   <tr>
+    <td>OpenReasoning-Nemotron-32B</td>
+    <td><span style="color:grey">89.2</span></td>
+    <td><span style="color:grey">84.2</span></td>
+  </tr>
+  <tr>
     <td>PCL-Reasoner-v1</td>
-    <td><p style="font-weight: bold;">85.7</p></td> 
-    <td><p style="font-weight: bold;">84.2</p></td> 
+    <td><p style="font-weight:grey;">85.7</span></td> 
+    <td><p style="font-weight:grey;">84.2</span></td> 
+  </tr>
+  <tr>
+    <td>PCL-Reasoner-v1.5</td>
+    <td><p style="font-weight: bold;">90.9</span></td> 
+    <td><p style="font-weight: bold;">85.7</span></td> 
   </tr>
 </table>
 
