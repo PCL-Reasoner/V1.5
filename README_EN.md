@@ -2,96 +2,88 @@
 
 ## Model Overview
 
-PCL-Reasoner-V1.5 is a 32B-parameter large language model specifically designed for mathematical reasoning. Built upon Qwen2.5-32B-Base, the model is trained using Supervised Fine-Tuning (SFT) and Reinforcement Learning (RL). A key innovation in our approach is the adoption of **Offline Reinforcement Learning (Offline RL)**, which significantly improves training efficiency compared to traditional online RL methods.
+PCL-Reasoner-V1.5 is a 32B-parameter large language model specifically designed for mathematical reasoning. The model is built upon Qwen2.5-32B-Base and trained through Supervised Fine-Tuning (SFT) and Reinforcement Learning (RL). A key innovation in our approach is the adoption of Offline RL (Offline Reinforcement Learning), which significantly enhances training efficiency compared to traditional online RL methods.
 
-On public benchmarks, PCL-Reasoner-V1.5 achieves state-of-the-art performance among 32B-scale models:
+PCL-Reasoner-V1.5 demonstrates outstanding performance among 32B-scale models on public datasets:
 
-- **91.3%** average accuracy on the AIME 2024 benchmark  
-- **91.0%** average accuracy on the AIME 2025 benchmark  
+- Achieves 90.9% average accuracy on the AIME 2024 benchmark
+- Achieves 85.7% average accuracy on the AIME 2025 benchmark
 
-All experiments were conducted exclusively on Huawei Ascend NPUs using publicly available datasets.
+All experiments were conducted on Huawei Ascend NPU using only publicly available datasets.
 
-To foster open collaboration and practical application, we have fully open-sourced the model weights, data processing pipelines, and training code for PCL-Reasoner-V1.5. This model not only represents one of the leading 32B mathematical reasoning models available today but also provides developers with valuable hands-on experience in domain-specific offline reinforcement learning and post-training methodologies. Users can easily deploy and evaluate the model by following the instructions below to explore advanced post-training techniques!
+To promote technology sharing and application, we have fully open-sourced the PCL-Reasoner-V1.5 model weights, data processing scripts, and training code. This model represents one of the leading 32B mathematical reasoning models today and provides developers with valuable practical experience in offline reinforcement learning for specialized domains and post-training solutions. Users can easily deploy and experience the model by following the tutorials below, and explore the practical methods and techniques of post-training!
 
----
 
 ## Development Guide
 
 ### 1. Training Code
 
-PCL-Reasoner-V1.5 is trained from PCL-Reasoner-V1 using the MindSpeed-LLM framework. We introduced a new trainer module `opg_trainer.py` and enhanced the dataset preprocessing pipeline to include a `reward` field. To facilitate reproducibility within the open-source community, we have packaged the complete training code under the `MindSpeed-LLM` directory in this repository.
+PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipeline implemented on the MindSpeed-LLM framework. We primarily added `opg_trainer.py` and incorporated a `reward` keyword in dataset processing. To facilitate reproducibility for the open-source community, we have packaged the entire training code in the `MindSpeed-LLM` directory.
 
 ### 2. Environment and Data Preparation
 
-#### 2.1 Environment Setup
+#### 2.1 Environment Setup:
 
-| Software      | Version        |
-|---------------|----------------|
-| Firmware & Driver | 24.1.rc3.5 |
-| CANN          | 8.3.RC1        |
-| Python        | 3.10           |
+| Software      | Version                 |
+| --------- | ----------        |
+| Firmware & Driver | 24.1.rc3.5        |
+| CANN      | 8.3.RC1           |
+| Python    | 3.10              |
 | vllm-ascend   | 0.9.1          |
-| MindSpeed-LLM     | commit: 887c2d868 |
+| MindSpeed-LLM | commit: 887c2d868 |
+
 
 #### 2.2 Data Processing
 
 ##### 2.2.1 Dataset Download
 
-In prior work, we had already elevated PCL-Reasoner-V1’s mathematical reasoning capability to a high level. To further refine performance, we selected challenging problems from NVIDIA’s publicly released **Nemotron-Post-Training-Dataset-v1** for subsequent reinforcement training.
+In our preliminary work, we had already elevated the mathematical reasoning capabilities of PCL-Reasoner-V1 to a high level. To further optimize model performance, we selected challenging problems from NVIDIA's publicly available Nemotron-Post-Training-Dataset-v1 for subsequent reinforcement training.
 
-| Dataset Name                    | Link                                                                                                                     |
-|----------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| Dataset Name                    | Dataset Link                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | nvidia/Nemotron-Post-Training-Dataset-v1 | [https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1](https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1) |
 
 ##### 2.2.2 Data Preprocessing
 
-The downloaded dataset is in Parquet format. We first convert it to JSONL for easier handling:
+After downloading, the dataset is in Parquet format. We first convert it to JSONL format for convenient subsequent processing.
 
 ```bash
 # dir_path_to_parquet_files=Nemotron-Post-Training-Dataset-v1/data
 # output_dir_path=Nemotron-Post-Training-Dataset-v1/orig2jsonl
 cd data_preprocess
-python convert_parquet2jsonl.py $dir_path_to_parquet_files $output_dir_path --workers 128
-# Merge all JSONL files into one
+python convert_parquet2jsonl.py $dir_path_to_parquet_files $output_dir_path  --workers 128
+# Merge all datasets into a single jsonl file
 cat $output_dir_path/*jsonl > Nemotron-Post-Training-Dataset-v1/all_samples.jsonl
 ```
 
-Statistical analysis revealed that each problem in the dataset was sampled multiple times, with only correct Chain-of-Thought (CoT) responses retained. Based on this, we computed per-problem accuracy and CoT length. The preprocessing consists of three steps:
+Through statistical analysis, we discovered that in the Nemotron-Post-Training-Dataset-v1 dataset, each problem appears multiple times, retaining only correct Chain of Thought (CoT) samples. Based on this observation, we can calculate the accuracy and CoT length for each problem. The entire data preprocessing process consists of three steps:
 
-1. **Separate Fully Correct vs. Partially Correct Samples**:
-    Most problems have 1–16 CoTs; a few have 17–32, likely due to duplication. We infer that the original dataset performed 16 inference attempts per problem and kept only correct CoTs. Thus:
-    - Filter out samples with exactly 16 or 32 CoTs (fully correct)
-    - Retain partially correct samples (1–15 CoTs)
+1. **Separating Fully Correct and Partially Correct Samples**: We counted the CoT quantities for identical problems in the original dataset, discovering that most problems correspond to 1-16 CoT samples, with very few problems corresponding to 17-32 CoT samples. Based on this, we inferred that the original dataset performed 16 inference passes on each problem and retained only correct CoT samples. Samples with 17-32 counts can be viewed as slightly duplicated problems. Therefore, the first step is to filter out samples with 16 and 32 CoT counts (i.e., fully correct samples) and retain partially correct samples:
     ```bash
     # cd data_preprocess 
-    python split_all_right_and_partial_right.py all_samples.jsonl \
-    --complete_output all_right_samples.jsonl \
-    --incomplete_output partial_right_samples.jsonl \
-    --processes 128
+    python split_all_right_and_partial_right.py all_samples.jsonl --complete_output all_right_samples.jsonl --incomplete_output partial_right_samples.jsonl --processes 128 
     ```
-    From 2,044,407 total CoTs, we obtained:
-    - 1,189,392 fully correct CoTs (filtered out)
-    - 855,015 partially correct CoTs (retained)
+   The original dataset contained 2,044,407 CoT samples. After processing, we obtained 1,189,392 fully correct CoT samples (with all-correct questions filtered out) and 855,015 partially correct CoT samples.
 
-2. **Filter Long CoT Samples**:
-    From the 855K partially correct CoTs, select those with average CoT length > 32K tokens:
+2. **Filtering Long CoT Samples**: From the 855,015 partially correct CoT samples, we selected samples with average CoT length greater than 32K tokens:
     ```bash
     # cd data_preprocess 
-    python static_and_filter_cot.py partial_right_samples.jsonl partial_right_samples_cot_filter.jsonl      path_to_tokenizer --processes 128
+    python static_and_filter_cot.py partial_right_samples.jsonl partial_right_samples_cot_filter.jsonl path_to_tokenizer --processes 128
     ```
-    Result: ~34K problems with CoT > 32K tokens.
+    After processing, we obtained approximately 34K problems, each with average CoT length exceeding 32K tokens.
 
-3. **Extract Unique Problems**:
-    Deduplicate to retain only the first occurrence of each problem:
-    ```bash
-    # cd data_preprocess 
-    python extract_first_problem.py partial_right_samples_cot_filter.jsonl partial_right_problem.jsonl
-    ```
-    Final dataset: ~6K unique problems.
+3. **Extracting Unique Problems**: From the 34K CoT samples, we extracted the first occurrence of each unique problem:
+   
+   ```bash
+   # cd data_preprocess 
+   python extract_first_problem.py partial_right_samples_cot_filter.jsonl partial_right_problem.jsonl
+   ```
+   After final processing, we obtained approximately 6K unique problems.
+
 
 ##### 2.2.3 Model Sampling
 
-Using the **PCL-Reasoner-V1** model, we sampled 8 responses per problem (total: 48K CoTs) with the following configuration (identical to evaluation settings):
+After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling, drawing 8 samples per problem to generate reasoning results. Sampling configuration is consistent with the evaluation settings below:
 
 | Sampling Hyperparameter       | Value                                       |
 | -------------- | ------------------------------------------ |
@@ -101,11 +93,17 @@ Using the **PCL-Reasoner-V1** model, we sampled 8 responses per problem (total: 
 | max_model_len    | 131072                                     |
 | system_prompt_type | amthinking |
 
-##### 2.2.4 CoT Correctness Evaluation
+After sampling, we obtained 48K CoT samples.
 
-Traditional rule-based evaluators (e.g., math_verify) often fail on complex math problems. Instead, we employed **Qwen3-32B** as an evaluator with a specialized prompt to judge whether the final answer in a CoT matches the ground truth.
+##### 2.2.4 Evaluating Correctness of Sampled CoT
 
-**Evaluation Prompt Template**:
+Based on previous training experience, we found that traditional methods using the Python `math_verify` package cannot effectively evaluate CoT answer correctness in all scenarios. For complex mathematical problems, rule-based matching approaches often produce various false judgments. Therefore, we employed the Qwen3-32B model to assess the correctness of CoT answers, with the specific approach as follows:
+
+1. We designed specialized prompts for the `Qwen3-32B` model to determine whether the final answer contained in the CoT is consistent with the `ground truth` provided by the problem;
+2. We deployed the `Qwen3-32B` model to perform inference evaluation on 48K problems;
+3. We compared the answer contained in the last 300 tokens of the CoT generated by `Qwen3-32B` with the `ground truth` provided by the problem, thereby determining whether the CoT is correct.
+
+The evaluation prompt template is as follows:
 
 ```text
 As a math scoring expert, given a standard answer, and a candidate answer, you need to compare whether the standard answer and the candidate answer are consistent. If they are consistent, return 1; if not, return 0. Remember the returned value should always be put in the \boxed{}.
@@ -124,70 +122,80 @@ Here is a task example:
 Please put your return value (0 or 1) as required above in the \boxed{} without any explanation or description.
 ```
 
-After evaluation:
-- 22,990 positive samples
-- 25,522 negative samples
+Finally, we obtained 22,990 positive samples and 25,522 negative samples.
 
-#### 2.3 Model Weight Preparation
+#### 2.3 Model Weights Preparation
 
-Download the base model **PCL-Reasoner-V1** from Hugging Face:
+Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repository:
 
-| Model Name          | Link                                                                           |
+| Model Name          | Weights Link                                                                           |
 | ----------------- | ---------------------------------------------------------------------------------- |
 | PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
 
-### 3. Training Procedure
+### 3 Training Pipeline
 
-Training is based on the **MindSpeed-LLM** framework and includes the following steps:
+Our training is based on the MindSpeed-LLM framework and includes the following steps:
 
-#### 3.1 Model Weight Conversion
+#### 3.1 Model Weights Conversion
 
-##### 3.1.1 Download Hugging Face Weights
+##### 3.1.1 Download HuggingFace Model Weights
+
+Download the PCL-Reasoner/V1 model weights from HuggingFace to your local machine.
 
 ```bash
-huggingface-cli download PCL-Reasoner/V1 --local-dir ~/local/PCL-Reasoner/V1
+# download  model
+huggingface-cli download  PCL-Reasoner/V1  --local-dir ~/local_dir/PCL-Reasoner/V1
 ```
 
-##### 3.1.2 Convert to MCore Format
+##### 3.1.2 Convert Model Weights Format
 
-MindSpeed-LLM requires weights in MCore format. Convert using:
+The MindSpeed-LLM framework is built on MindSpeed and reads weights in mcore format. Before training, HuggingFace weights need to be converted to Mcore format. The script can be launched with bash, and configuration parameters can be adjusted according to your environment. The launch command and configuration parameters are as follows:
 
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-hf_model_path=/path/to/hf/model
+hf_model_path=~/local_dir/PCL-Reasoner/V1
+# Set the required parameters for weights conversion
 cd MindSpeed-LLM
 python convert_ckpt.py \
-    --use-mcore-models \
-    --model-type GPT \
-    --load-model-type hf \
-    --save-model-type mg \
-    --target-tensor-parallel-size 8 \
-    --target-pipeline-parallel-size 4 \
-    --add-qkv-bias \
-    --load-dir $hf_model_path \
-    --save-dir ${hf_model_path}/mcore_tp8_pp4/ \
-    --tokenizer-model $hf_model_path/tokenizer.json \
-    --model-type-hf llama2 \
-    --params-dtype bf16
+       --use-mcore-models \
+       --model-type GPT \
+       --load-model-type hf \
+       --save-model-type mg \
+       --target-tensor-parallel-size 8 \
+       --target-pipeline-parallel-size 4 \
+       --add-qkv-bias \
+       --load-dir $hf_model_path \
+       --save-dir ${hf_model_path}/mcore_tp8_pp4/ \
+       --tokenizer-model $hf_model_path/tokenizer.json \
+       --model-type-hf llama2 \
+       --params-dtype bf16 
 ```
 
-**Parameter Descriptions**:
+###### Parameter Descriptions
 
-- --use-mcore-models: Enable MCore models
-- --model-type: e.g., GPT
-- --load-model-type / --save-model-type: hf (Hugging Face) → mg (MCore)
-- --target-tensor-parallel-size: Tensor parallelism degree
-- --target-pipeline-parallel-size: Pipeline parallelism degree
-- --add-qkv-bias: Add bias to QKV projections
-- --params-dtype: e.g., bf16
-  
+- `use-mcore-models`: Enable MCore models;
+- `model-type`: Specify model type, e.g., GPT;
+- `load-model-type`: Specify the model type to load, e.g., hf (HuggingFace);
+- `save-model-type`: Specify the model type to save, e.g., mg;
+- `target-tensor-parallel-size`: Set the target tensor parallelism size;
+- `target-pipeline-parallel-size`: Set the target pipeline parallelism size;
+- `add-qkv-bias`: Whether to add QKV bias;
+- `load-dir`: Path to load HuggingFace weights;
+- `save-dir`: Path to save converted weights;
+- `tokenizer-model`: Path to the tokenizer model file;
+- `model-type-hf`: Specify HuggingFace model type, e.g., llama2;
+- `params-dtype`: Specify parameter data type, e.g., bf16.
+
+
 
 #### 3.2 Dataset Conversion
 
-Convert the 48K CoT samples (JSONL) into MindSpeed-LLM-compatible binary format:
+After inference, we obtained 48K CoT samples in JSONL format, containing the problem, inference results, and corresponding CoT for the inference results. These need to be converted to a format readable by MindSpeed-LLM:
+
 
 ```bash
+# Please modify the set_env.sh path according to your actual environment
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 hf_model_path=/path/to/hf/model
@@ -205,60 +213,100 @@ python preprocess_data.py \
     --map-keys '{"prompt":"prompt", "query":"", "response":"response", "reward":"reward"}'
 ```
 
+##### Parameter Descriptions
+
+- `input`: Path to input JSONL file
+- `tokenizer-type`: Type of tokenizer to use
+- `tokenizer-name-or-path`: Path to tokenizer
+- `output-prefix`: Path to output files
+- `workers`: Number of threads for data processing
+- `log-interval`: Sample interval for logging
+- `handler-name`: Name of the selected `data handler`
+- `prompt-type`: Type of prompt in the input, `empty` means no prompt (indicating the original prompt already contains the chat template)
+- `cache-dir`: Cache directory
+- `map-keys`: Field mapping for the input JSONL file
+
+
 #### 3.3 Training Configuration
 
-- Global batch size: 128
-- Learning rate: Cosine decay from $6×10^{−5}$ to $1×10^{−7}$ 
-- Warmup ratio: 0.05
-- Optimizer: AdamW ($\beta_1=0.9, \beta_2=0.95$)
-- Hardware: 16 × Atlas 910C SuperPoD nodes (8 chips/node)
-- Epochs: 4 (~116 hours total)
+We adopted an inspired training strategy. Global batch size was set to 128, with learning rate decaying from $6×10^{−5}$ to $1×10^{−7}$ following a cosine schedule, and a warm-up ratio of 0.05. AdamW optimizer parameters were configured as $\beta_1=0.9$ and $\beta_2=0.95$. Training was conducted on 16 Atlas 910C SuperPoD nodes (each containing 8 accelerators). The entire fine-tuning process involved 4 epochs and took approximately 116 hours. The corresponding training loss curves are shown in Figure \ref{fig:loss}.
 
-**Data Packing**: Enabled during SFT to concatenate variable-length samples into fixed 48K-token sequences, eliminating padding overhead and accelerating training.
+To maximize computational efficiency, we enabled data packing during the supervised fine-tuning phase. This feature allows concatenating samples of varying lengths within each batch into a preset sequence length (48K tokens). By merging multiple short sequences into one long sequence, we effectively eliminated redundant computation caused by sequence padding, significantly accelerating training speed.
 
-#### 3.4 Launch Training
+#### 3.4 Launching Training
+
+The training process consists of three steps:
+
+1. Activate environment: `source /path/to/set_env.sh`
+2. Launch training: `cd MindSpeed-LLM; bash scripts/lauch_multi_nodes.sh node_list.txt`
+
+
+#### 3.5 Converting Model Weights to HuggingFace Format
+
+After training is complete, weights need to be converted from Megatron-LM format to HuggingFace standard format, ensuring they can be used for continued training and inference in the HuggingFace environment. The weight conversion script is as follows:
 
 ```bash
-# Step 1: Activate environment
-source /path/to/set_env.sh
-
-# Step 2: Start multi-node training
-cd MindSpeed-LLM
-bash scripts/launch_multi_nodes.sh node_list.txt
+python convert_ckpt.py \
+    --model-type GPT \
+    --load-model-type mg \
+    --save-model-type hf \
+    --model-type-hf llama2 \
+    --use-mcore-models \
+    --load-dir ./model_weights/sft_pcl_model/ \
+    --target-tensor-parallel-size 1 \
+    --target-pipeline-parallel-size 1 \
+    --save-dir ~/local_dir/PCL-Reasoner/V1/  # <-- Please fill in the original HF model path; new weights will be saved in ./local_dir/PCL-Reasoner/V1/mg2hf
 ```
 
-### 4. Evaluation Procedure
+Note: When converting to HuggingFace weights, you must set --target-tensor-parallel-size = 1 and --target-pipeline-parallel-size = 1.
 
-We use [LLMEval](https://gitee.com/jianzhnie/LLMEval) —a toolkit developed by our team for LLM reasoning evaluation—to benchmark PCL-Reasoner-V1.5. LLMEval supports both vLLM and SGLang backends and has been validated on Ascend hardware. See the LLMEval documentation for details.
+After conversion is complete, the new HuggingFace format weights will be stored in the `~/local_dir/PCL-Reasoner/V1/mg2hf` directory. You can then load and perform inference using vllm, sglang, or huggingface frameworks.
 
-#### 4.1 Evaluation Environment Setup
 
-##### 4.1.1 Install vLLM and vLLM-Ascend
+### 4. Evaluation Pipeline:
+
+We use [LLMEval](https://gitee.com/jianzhnie/LLMEval) to evaluate the model. LLMEval is an evaluation tool developed by our team, primarily designed for evaluating large model inference. It supports both vllm and sglang inference backends and multiple evaluation datasets. It has successfully reproduced the results of multiple open-source inference models in the Ascend environment. For more details, please refer to [LLMEval Usage Tutorial](https://gitee.com/jianzhnie/LLMEval).
+
+#### 4.1 Evaluation Environment Configuration
+
+#### 4.1.1 Install vllm and vllm-ascend
+
+Please refer to the [vllm documentation](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) and [vllm-ascend documentation](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) to install vllm and vllm-ascend environments.
 
 ```bash
+# Install vllm-project/vllm from pypi
 pip install vllm==0.9.1
+
+# Install vllm-project/vllm-ascend from pypi.
 pip install vllm-ascend==0.9.1
 ```
-##### 4.1.2 Set Up LLMEval
+
+#### 4.1.2 Configure llmeval Environment
 
 ```bash
+# Clone the LLMEval repository
 git clone https://gitee.com/jianzhnie/LLMEval.git
+
+# Navigate to the LLMEval directory
 cd LLMEval
+# Install LLMEval in editable mode
 pip install -e .
 ```
 
-#### 4.2 Run Evaluation
+
+#### 4.2 Start Evaluation
 
 ##### Step 1: Launch vLLM Server
 
 ```bash
 source set_env.sh
 
-model_path="/path/to/pcl_reasoner_v1"
+model_path="~/local_dir/PCL-Reasoner/V1"
 model_name="PCL-Reasoner-v1"
+
 num_gpus=8
-max_model_len=131072
-gpu_memory_utilization=0.9
+max_model_len=131072  # ✅ Supports 128k context length
+gpu_memory_utilization=0.9  # ✅ Increases memory utilization
 
 python -m vllm.entrypoints.openai.api_server \
     --model $model_path \
@@ -266,24 +314,35 @@ python -m vllm.entrypoints.openai.api_server \
     --served-model-name $model_name \
     --tensor-parallel-size $num_gpus \
     --gpu-memory-utilization $gpu_memory_utilization \
-    --max-model-len $max_model_len \
+    --max-model-len $max_model_len  \
     --enforce-eager \
     --port 8090
 ```
 
-##### Step 2: Run Inference
+Adjust the `tensor_parallel_size` parameter according to available devices.
+
+
+##### Step 2: Submit Inference Tasks
+
+After launching vLLM service, run the inference script to generate responses and save results to a specified output file.
 
 ```bash
 source set_env.sh
+
 set -euo pipefail
 
+# --- Configuration ---
 output_dir="./output/PCL-Reasoner-v1"
 model_name="PCL-Reasoner-v1"
+
 base_url="http://127.0.0.1:8090/v1"
-n_samples=64
+n_samples=64  # Default sample size for aime24 and aime25
+
+# Create output directory if it doesn't exist
 mkdir -p "${output_dir}"
 
-# AIME25
+# --- Run Inference Tasks ---
+# aime25 (repeated sample 64 times)
 python ./llmeval/vllm/online_server.py \
     --input_file "./data/aime25.jsonl" \
     --input_key "prompt" \
@@ -291,11 +350,11 @@ python ./llmeval/vllm/online_server.py \
     --base_url "${base_url}" \
     --model_name "${model_name}" \
     --n_samples "${n_samples}" \
-    --temperature 0.6 \
+    --temperature 0.6  \
     --system_prompt_type amthinking \
     --max_workers 64
 
-# AIME24
+# aime24 (repeated sample 64 times)
 python ./llmeval/vllm/online_server.py \
     --input_file "./data/aime24.jsonl" \
     --input_key "prompt" \
@@ -303,16 +362,17 @@ python ./llmeval/vllm/online_server.py \
     --base_url "${base_url}" \
     --model_name "${model_name}" \
     --n_samples "${n_samples}" \
-    --temperature 0.6 \
+    --temperature 0.6  \
     --system_prompt_type amthinking \
     --max_workers 64
 
 echo "🎉 All inference tasks completed successfully!"
 ```
 
-> Note: Repeated sampling (64×) reduces evaluation variance but may take >8 hours depending on hardware.
+**Note:** We use repeated sampling to reduce evaluation variance, but this may take a long time to complete (potentially over 8 hours depending on hardware).
 
-**Evaluation Sampling Parameters**:
+
+The evaluation hyperparameters we used are shown in the table below:
 
 | Sampling Hyperparameter       | Value                                       |
 | -------------- | ------------------------------------------ |
@@ -322,18 +382,27 @@ echo "🎉 All inference tasks completed successfully!"
 | max_model_len    | 131072                                     |
 | system_prompt_type | amthinking |
 
-##### Step 3: Scoring
+##### Step 3: Evaluation Scoring
+
+After completing inference, use the following command to perform evaluation:
 
 ```bash
 source set_env.sh
+
 set -euo pipefail
 
+# --- Configuration ---
 output_dir="./output/PCL-Reasoner-v1"
-n_samples=64
+n_samples=64 # Default sample size for aime24 and aime25
+
+# Evaluation output directory
 reval_dir="${output_dir}/eval_score"
+
+# Create evaluation directory if it doesn't exist
 mkdir -p "${reval_dir}"
 
-# AIME24
+# --- Evaluate Each Task ---
+# Evaluate aime24
 python ./llmeval/tasks/math_eval/eval.py \
     --input_path "${output_dir}/aime24_bz${n_samples}.jsonl" \
     --cache_path "${reval_dir}/aime24_bz${n_samples}.jsonl" \
@@ -341,7 +410,7 @@ python ./llmeval/tasks/math_eval/eval.py \
     --max_workers 16 \
     > "${reval_dir}/aime24_bz${n_samples}_res_result.txt"
 
-# AIME25
+# Evaluate aime25
 python ./llmeval/tasks/math_eval/eval.py \
     --input_path "${output_dir}/aime25_bz${n_samples}.jsonl" \
     --cache_path "${reval_dir}/aime25_bz${n_samples}.jsonl" \
@@ -352,30 +421,32 @@ python ./llmeval/tasks/math_eval/eval.py \
 echo "🎯 Evaluation completed successfully!"
 ```
 
-#### 4.3 Evaluation Results
 
-We report Avg@32 (average over 32 samples) for robustness:
+####  4.3 Evaluation Results
 
+Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
+
+<!-- Table base styling (optional) -->
 
 <style>
   table { border-collapse: collapse; width: 100%; margin-left: auto;margin-right: auto;}
   th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
 </style>
 
-<!-- 表格主体 -->
+<!-- Table content -->
 
 <table>
   <tr>
-    <th>模型规格</th>
-    <th>模型</th>
+    <th>Model Scale</th>
+    <th>Model</th>
     <th>AIME 24</th>
     <th>AIME 25</th>
   </tr>
-  <!-- 合并行表头 >100B -->
+  <!-- Merged row header >100B -->
   <tr>
     <th rowspan="6">&gt;100B</th>
   </tr>
-  <!-- >100B 组数据行 -->
+  <!-- >100B data rows -->
   <tr>
     <td>DeepSeek-R1</td>
     <td><span style="color:grey">79.8</span></td>
@@ -401,15 +472,15 @@ We report Avg@32 (average over 32 samples) for robustness:
     <td><span style="color:red">90.8</span></td>
     <td><span style="color:grey">83</span></td>
   </tr>
-  <!-- 分隔行 -->
+  <!-- Separator row -->
   <tr>
     <td colspan="4"></td>
   </tr>
-  <!-- 合并行表头 32B -->
+  <!-- Merged row header 32B -->
   <tr>
-    <th rowspan="7">32B</th>
+    <th rowspan="9">32B</th>
   </tr>
-  <!-- 32B 组数据行 -->
+  <!-- 32B data rows -->
   <tr>
     <td>Qwen3-32B</td>
     <td><span style="color:grey">81.4</span></td>
@@ -436,15 +507,25 @@ We report Avg@32 (average over 32 samples) for robustness:
     <td><span style="color:grey">74.4</span></td>
   </tr>
   <tr>
+    <td>OpenReasoning-Nemotron-32B</td>
+    <td><span style="color:grey">89.2</span></td>
+    <td><span style="color:grey">84.2</span></td>
+  </tr>
+  <tr>
     <td>PCL-Reasoner-v1</td>
+    <td><p style="font-weight:grey;">85.7</p></td> 
+    <td><p style="font-weight:grey;">84.2</p></td> 
+  </tr>
+  <tr>
+    <td>PCL-Reasoner-v1.5</td>
+    <td><p style="font-weight: bold;">90.9</p></td> 
     <td><p style="font-weight: bold;">85.7</p></td> 
-    <td><p style="font-weight: bold;">84.2</p></td> 
   </tr>
 </table>
 
-> *(注：模型在AIME24/25评测集上的生成结果文件已同步上传至 `PCL-Reasoner-V1.5/eval_result`目录，供开发者用于模型验证与效果比对参考）*
+> *(Note: The model's generated result files on the AIME24/25 evaluation sets have been synchronized and uploaded to the `PCL-Reasoner-V1.5/eval_result` directory for developers to use in model validation and effect comparison)*
 
-## Ciation
+## Citation
 
 ```bibtex
 @article{PCL-Reasoner-v1.5,
