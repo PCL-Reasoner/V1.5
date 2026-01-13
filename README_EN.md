@@ -429,59 +429,10 @@ echo "🎯 Evaluation completed successfully!"
 Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
 
 <!-- Table base styling (optional) -->
-
-<style>
-  .table-wrapper {
-    overflow-x: auto;
-    margin: 0 0 1rem 0;
-  }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    max-width: 1100px;
-    margin-left: auto;
-    margin-right: auto;
-    border: 1px solid #f0f0f0;
-    background: #fff;
-  }
-  caption {
-    caption-side: top;
-    text-align: left;
-    padding: 8px 0;
-    font-weight: 600;
-  }
-  th, td {
-    border: 1px solid #eee;
-    padding: 10px 8px;
-    text-align: center;
-    vertical-align: middle;
-  }
-  th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-  }
-  th.row-label {
-    background-color: #fafafa;
-    width: 120px;
-  }
-  tr.separator td {
-    background: transparent;
-    border-top: 0;
-    height: 12px;
-  }
-  .score { color: #666; }
-  .score--high { color: #d32f2f; font-weight: 700; }
-  @media (max-width: 640px) {
-    th, td { padding: 8px 6px; font-size: 14px; }
-    table { width: 100%; }
-  }
-</style>
-
 <!-- Table content -->
 
 <div class="table-wrapper">
 <table>
-  <caption>Detailed evaluation results on AIME24/AIME25 (Avg@32)</caption>
   <thead>
     <tr>
       <th>Model Scale</th>
