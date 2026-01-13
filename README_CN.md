@@ -425,14 +425,7 @@ echo "🎯 Evaluation completed successfully!"
 
 我们在AIME24/AIME25评测结果详见下表数据。为确保评估准确性，我们采用Avg@32指标（平均32次采样）进行了评测：
 
-<!-- 表格基础样式（可选添加） -->
 
-<style>
-  table { border-collapse: collapse; width: 100%; margin-left: auto;margin-right: auto;}
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-</style>
-
-<!-- 表格主体 -->
 
 <table>
   <tr>
@@ -531,6 +524,6 @@ echo "🎯 Evaluation completed successfully!"
   title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning},
   author={Yao Lu, Deng Dong Fan, Jianzheng Nie, et al.},
   journal={arXiv preprint arXiv:2405.14524},
-  year={2024}
+  year={2026}
 }
 ```
