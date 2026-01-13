@@ -431,8 +431,24 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
 <!-- Table base styling (optional) -->
 
 <style>
-  table { border-collapse: collapse; width: 100%; margin-left: auto;margin-right: auto;}
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  th {
+    border: 1px solid #ddd;
+    padding: 10px 8px;
+    text-align: center;
+    background-color: #f5f5f5;
+    font-weight: 600;
+  }
+  td {
+    border: 1px solid #ddd;
+    padding: 10px 8px;
+    text-align: center;
+  }
 </style>
 
 <!-- Table content -->
@@ -515,13 +531,13 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
   </tr>
   <tr>
     <td>PCL-Reasoner-v1</td>
-    <td><p style="font-weight:grey;">85.7</p></td> 
-    <td><p style="font-weight:grey;">84.2</p></td> 
+    <td><span style="color: grey;">85.7</span></td>
+    <td><span style="color: grey;">84.2</span></td>
   </tr>
   <tr>
     <td>PCL-Reasoner-v1.5</td>
-    <td><p style="font-weight: bold;">90.9</p></td> 
-    <td><p style="font-weight: bold;">85.7</p></td> 
+    <td><span style="font-weight: bold; color: #d32f2f;">90.9</span></td>
+    <td><span style="font-weight: bold; color: #d32f2f;">85.7</span></td>
   </tr>
 </table>
 
