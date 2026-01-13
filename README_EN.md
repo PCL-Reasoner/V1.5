@@ -431,115 +431,146 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
 <!-- Table base styling (optional) -->
 
 <style>
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 0 0 1rem 0;
+  }
   table {
     border-collapse: collapse;
     width: 100%;
+    max-width: 1100px;
     margin-left: auto;
     margin-right: auto;
+    border: 1px solid #f0f0f0;
+    background: #fff;
   }
-  th {
-    border: 1px solid #ddd;
+  caption {
+    caption-side: top;
+    text-align: left;
+    padding: 8px 0;
+    font-weight: 600;
+  }
+  th, td {
+    border: 1px solid #eee;
     padding: 10px 8px;
     text-align: center;
+    vertical-align: middle;
+  }
+  th {
     background-color: #f5f5f5;
     font-weight: 600;
   }
-  td {
-    border: 1px solid #ddd;
-    padding: 10px 8px;
-    text-align: center;
+  th.row-label {
+    background-color: #fafafa;
+    width: 120px;
+  }
+  tr.separator td {
+    background: transparent;
+    border-top: 0;
+    height: 12px;
+  }
+  .score { color: #666; }
+  .score--high { color: #d32f2f; font-weight: 700; }
+  @media (max-width: 640px) {
+    th, td { padding: 8px 6px; font-size: 14px; }
+    table { width: 100%; }
   }
 </style>
 
 <!-- Table content -->
 
+<div class="table-wrapper">
 <table>
-  <tr>
-    <th>Model Scale</th>
-    <th>Model</th>
-    <th>AIME 24</th>
-    <th>AIME 25</th>
-  </tr>
-  <!-- Merged row header >100B -->
-  <tr>
-    <th rowspan="6">&gt;100B</th>
-  </tr>
-  <!-- >100B data rows -->
-  <tr>
-    <td>DeepSeek-R1</td>
-    <td><span style="color:grey">79.8</span></td>
-    <td><span style="color:grey">70</span></td>
-  </tr>
-  <tr>
-    <td>DeepSeek-R1-0528</td>
-    <td><span style="color:red">91.4</span></td>
-    <td><span style="color:red">87.5</span></td>
-  </tr>
-  <tr>
-    <td>Qwen3-235B-A22B</td>
-    <td><span style="color:grey">85.7</span></td>
-    <td><span style="color:grey">81.5</span></td>
-  </tr>
-  <tr>
-    <td>OpenAI-o3</td>
-    <td><span style="color:red">91.6</span></td>
-    <td><span style="color:red">88.9</span></td>
-  </tr>
-  <tr>
-    <td>Gemini-2.5-Pro-0506</td>
-    <td><span style="color:red">90.8</span></td>
-    <td><span style="color:grey">83</span></td>
-  </tr>
-  <!-- Separator row -->
-  <tr>
-    <td colspan="4"></td>
-  </tr>
-  <!-- Merged row header 32B -->
-  <tr>
-    <th rowspan="9">32B</th>
-  </tr>
-  <!-- 32B data rows -->
-  <tr>
-    <td>Qwen3-32B</td>
-    <td><span style="color:grey">81.4</span></td>
-    <td><span style="color:grey">72.9</span></td>
-  </tr>
-  <tr>
-    <td>QwQ-32B</td>
-    <td><span style="color:grey">79.5</span></td> 
-    <td><span style="color:grey">69.5</span></td>
-  </tr>
-  <tr>
-    <td>DeepSeek-R1-Distill-Qwen-32B</td>
-    <td><span style="color:grey">72.6</span></td>
-    <td><span style="color:grey">49.6</span></td> 
-  </tr>
-  <tr>
-    <td>Skywork-OR1-32B</td>
-    <td><span style="color:grey">82.2</span></td>
-    <td><span style="color:grey">73.3</span></td>
-  </tr>
-  <tr>
-    <td>AM-Thinking-v1</td>
-    <td><span style="color:grey">85.3</span></td>
-    <td><span style="color:grey">74.4</span></td>
-  </tr>
-  <tr>
-    <td>OpenReasoning-Nemotron-32B</td>
-    <td><span style="color:grey">89.2</span></td>
-    <td><span style="color:grey">84.2</span></td>
-  </tr>
-  <tr>
-    <td>PCL-Reasoner-v1</td>
-    <td><span style="color: grey;">85.7</span></td>
-    <td><span style="color: grey;">84.2</span></td>
-  </tr>
-  <tr>
-    <td>PCL-Reasoner-v1.5</td>
-    <td><span style="font-weight: bold; color: #d32f2f;">90.9</span></td>
-    <td><span style="font-weight: bold; color: #d32f2f;">85.7</span></td>
-  </tr>
+  <caption>Detailed evaluation results on AIME24/AIME25 (Avg@32)</caption>
+  <thead>
+    <tr>
+      <th>Model Scale</th>
+      <th>Model</th>
+      <th>AIME 24</th>
+      <th>AIME 25</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Merged row header &gt;100B -->
+    <tr>
+      <th class="row-label" rowspan="6" scope="rowgroup">&gt;100B</th>
+    </tr>
+    <tr>
+      <td>DeepSeek-R1</td>
+      <td class="score">79.8</td>
+      <td class="score">70</td>
+    </tr>
+    <tr>
+      <td>DeepSeek-R1-0528</td>
+      <td class="score--high">91.4</td>
+      <td class="score--high">87.5</td>
+    </tr>
+    <tr>
+      <td>Qwen3-235B-A22B</td>
+      <td class="score">85.7</td>
+      <td class="score">81.5</td>
+    </tr>
+    <tr>
+      <td>OpenAI-o3</td>
+      <td class="score--high">91.6</td>
+      <td class="score--high">88.9</td>
+    </tr>
+    <tr>
+      <td>Gemini-2.5-Pro-0506</td>
+      <td class="score--high">90.8</td>
+      <td class="score">83</td>
+    </tr>
+    <!-- Separator row -->
+    <tr class="separator">
+      <td colspan="4"></td>
+    </tr>
+    <!-- Merged row header 32B -->
+    <tr>
+      <th class="row-label" rowspan="9" scope="rowgroup">32B</th>
+    </tr>
+    <tr>
+      <td>Qwen3-32B</td>
+      <td class="score">81.4</td>
+      <td class="score">72.9</td>
+    </tr>
+    <tr>
+      <td>QwQ-32B</td>
+      <td class="score">79.5</td>
+      <td class="score">69.5</td>
+    </tr>
+    <tr>
+      <td>DeepSeek-R1-Distill-Qwen-32B</td>
+      <td class="score">72.6</td>
+      <td class="score">49.6</td>
+    </tr>
+    <tr>
+      <td>Skywork-OR1-32B</td>
+      <td class="score">82.2</td>
+      <td class="score">73.3</td>
+    </tr>
+    <tr>
+      <td>AM-Thinking-v1</td>
+      <td class="score">85.3</td>
+      <td class="score">74.4</td>
+    </tr>
+    <tr>
+      <td>OpenReasoning-Nemotron-32B</td>
+      <td class="score">89.2</td>
+      <td class="score">84.2</td>
+    </tr>
+    <tr>
+      <td>PCL-Reasoner-v1</td>
+      <td class="score">85.7</td>
+      <td class="score">84.2</td>
+    </tr>
+    <tr>
+      <td>PCL-Reasoner-v1.5</td>
+      <td class="score--high">90.9</td>
+      <td class="score--high">85.7</td>
+    </tr>
+  </tbody>
 </table>
+</div>
 
 > *(Note: The model's generated result files on the AIME24/25 evaluation sets have been synchronized and uploaded to the `PCL-Reasoner-V1.5/eval_result` directory for developers to use in model validation and effect comparison)*
 
