@@ -448,27 +448,27 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
     </tr>
     <tr>
       <td>DeepSeek-R1</td>
-      <td class="score">79.8</td>
-      <td class="score">70</td>
+      <td class="score"> <span style="color: grey;">79.8</td>
+      <td class="score"> <span style="color: grey;">70</td>
     </tr>
     <tr>
       <td>DeepSeek-R1-0528</td>
-      <td class="score--high">91.4</td>
-      <td class="score--high">87.5</td>
+      <td class="score--high"><span style="color: red; font-weight: bold;">91.4</td>
+      <td class="score--high"><span style="color: red; font-weight: bold;">87.5</td>
     </tr>
     <tr>
       <td>Qwen3-235B-A22B</td>
-      <td class="score">85.7</td>
-      <td class="score">81.5</td>
+      <td class="score"><span style="color: grey;">85.7</td>
+      <td class="score"><span style="color: grey;">81.5</td>
     </tr>
     <tr>
       <td>OpenAI-o3</td>
-      <td class="score--high">91.6</td>
-      <td class="score--high">88.9</td>
+      <td class="score--high"><span style="color: red; font-weight: bold;">91.6</td>
+      <td class="score--high"><span style="color: red; font-weight: bold;">88.9</td>
     </tr>
     <tr>
       <td>Gemini-2.5-Pro-0506</td>
-      <td class="score--high">90.8</td>
+      <td class="score--high"><span style="color: red; font-weight: bold;">90.8</td>
       <td class="score">83</td>
     </tr>
     <!-- Separator row -->
@@ -481,43 +481,43 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
     </tr>
     <tr>
       <td>Qwen3-32B</td>
-      <td class="score">81.4</td>
-      <td class="score">72.9</td>
+      <td class="score"><span style="color: grey;">81.4</td>
+      <td class="score"><span style="color: grey;">72.9</td>
     </tr>
     <tr>
       <td>QwQ-32B</td>
-      <td class="score">79.5</td>
-      <td class="score">69.5</td>
+      <td class="score"><span style="color: grey;">79.5</td>
+      <td class="score"><span style="color: grey;">69.5</td>
     </tr>
     <tr>
       <td>DeepSeek-R1-Distill-Qwen-32B</td>
-      <td class="score">72.6</td>
-      <td class="score">49.6</td>
+      <td class="score"><span style="color: grey;">72.6</td>
+      <td class="score"><span style="color: grey;">49.6</td>
     </tr>
     <tr>
       <td>Skywork-OR1-32B</td>
-      <td class="score">82.2</td>
-      <td class="score">73.3</td>
+      <td class="score"><span style="color: grey;">82.2</td>
+      <td class="score"><span style="color: grey;">73.3</td>
     </tr>
     <tr>
       <td>AM-Thinking-v1</td>
-      <td class="score">85.3</td>
-      <td class="score">74.4</td>
+      <td class="score"><span style="color: grey;">85.3</td>
+      <td class="score"><span style="color: grey;">74.4</td>
     </tr>
     <tr>
       <td>OpenReasoning-Nemotron-32B</td>
-      <td class="score">89.2</td>
-      <td class="score">84.2</td>
+      <td class="score"><span style="color: grey;">89.2</td>
+      <td class="score"><span style="color: grey;">84.2</td>
     </tr>
     <tr>
       <td>PCL-Reasoner-v1</td>
-      <td class="score">85.7</td>
-      <td class="score">84.2</td>
+      <td class="score"><span style="color: grey;">85.7</td>
+      <td class="score"><span style="color: grey;">4.2</td>
     </tr>
     <tr>
       <td>PCL-Reasoner-v1.5</td>
-      <td class="score--high">90.9</td>
-      <td class="score--high">85.7</td>
+      <td class="score--high"><span style="color: green; font-weight: bold;">90.9</td>
+      <td class="score--high"><span style="color: green; font-weight: bold;">85.7</td>
     </tr>
   </tbody>
 </table>
