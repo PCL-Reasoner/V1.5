@@ -512,7 +512,7 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
     <tr>
       <td>PCL-Reasoner-v1</td>
       <td class="score"><span style="color: grey;">85.7</td>
-      <td class="score"><span style="color: grey;">4.2</td>
+      <td class="score"><span style="color: grey;">84.2</td>
     </tr>
     <tr>
       <td>PCL-Reasoner-v1.5</td>
