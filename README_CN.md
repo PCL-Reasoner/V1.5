@@ -198,7 +198,7 @@ python convert_ckpt.py \
 # 请按照您的真实环境修改 set_env.sh 路径
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-hf_model_path=/path/to/hf/model
+hf_model_path=~/local_dir/PCL-Reasoner/V1
 python preprocess_data.py \
     --input /path/to/opg_train_remove_all_wrong_cot_lt_48k.jsonl \
     --tokenizer-type PretrainedFromHF \
@@ -209,11 +209,10 @@ python preprocess_data.py \
     --log-interval 1000 \
     --handler-name AlpacaStyleInstructionHandler \
     --prompt-type empty \
-    --cache-dir /path/to/tmp/ \
     --map-keys '{"prompt":"prompt", "query":"", "response":"response", "reward":"reward"}'
 ```
 
-#####
+###### 参数介绍
 
 - `input`: 输入jsonl文件路径
 - `tokenizer-type`: 输入的tokenizer类型
@@ -223,7 +222,6 @@ python preprocess_data.py \
 - `log-interval`: 日志输出样本数间隔
 - `handler-name`: 选择的`data handler`名称
 - `prompt-type`: 输入的prompt类型，empty表示无prompt（说明原始prompt里面已经包含了`chat template`)
-- `cache-dir`: 缓存目录
 - `map-keys`: 输入的jsonl文件字段映射
 
 
@@ -426,7 +424,7 @@ echo "🎯 Evaluation completed successfully!"
 我们在AIME24/AIME25评测结果详见下表数据。为确保评估准确性，我们采用Avg@32指标（平均32次采样）进行了评测：
 
 <style>
-  table { border-collapse: collapse; width: 100%; margin-left: auto;margin-right: auto;}
+  table { border-collapse: collapse; width: 100%; margin-left: auto; margin-right: auto; }
   th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
 </style>
 
@@ -437,84 +435,78 @@ echo "🎯 Evaluation completed successfully!"
     <th>AIME 24</th>
     <th>AIME 25</th>
   </tr>
-  <!-- 合并行表头 >100B -->
-  <tr>
-    <th rowspan="6">&gt;100B</th>
-  </tr>
   <!-- >100B 组数据行 -->
   <tr>
+    <th rowspan="6">&gt;100B</th>
     <td>DeepSeek-R1</td>
-    <td><span style="color:grey">79.8</span></td>
-    <td><span style="color:grey">70</span></td>
+    <td><span style="color: grey;">79.8</span></td>
+    <td><span style="color: grey;">70</span></td>
   </tr>
   <tr>
     <td>DeepSeek-R1-0528</td>
-    <td><span style="color:red">91.4</span></td>
-    <td><span style="color:red">87.5</span></td>
+    <td><span style="color: red; font-weight: bold;">91.4</span></td>
+    <td><span style="color: red; font-weight: bold;">87.5</span></td>
   </tr>
   <tr>
     <td>Qwen3-235B-A22B</td>
-    <td><span style="color:grey">85.7</span></td>
-    <td><span style="color:grey">81.5</span></td>
+    <td><span style="color: grey;">85.7</span></td>
+    <td><span style="color: grey;">81.5</span></td>
   </tr>
   <tr>
     <td>OpenAI-o3</td>
-    <td><span style="color:red">91.6</span></td>
-    <td><span style="color:red">88.9</span></td>
+    <td><span style="color: red; font-weight: bold;">91.6</span></td>
+    <td><span style="color: red; font-weight: bold;">88.9</span></td>
   </tr>
   <tr>
     <td>Gemini-2.5-Pro-0506</td>
-    <td><span style="color:red">90.8</span></td>
-    <td><span style="color:grey">83</span></td>
+    <td><span style="color: red; font-weight: bold;">90.8</span></td>
+    <td><span style="color: grey;">83</span></td>
   </tr>
   <!-- 分隔行 -->
   <tr>
     <td colspan="4"></td>
   </tr>
-  <!-- 合并行表头 32B -->
-  <tr>
-    <th rowspan="9">32B</th>
-  </tr>
   <!-- 32B 组数据行 -->
   <tr>
+    <th rowspan="9">32B</th>
     <td>Qwen3-32B</td>
-    <td><span style="color:grey">81.4</span></td>
-    <td><span style="color:grey">72.9</span></td>
+    <td><span style="color: grey;">81.4</span></td>
+    <td><span style="color: grey;">72.9</span></td>
   </tr>
   <tr>
     <td>QwQ-32B</td>
-    <td><span style="color:grey">79.5</span></td> 
-    <td><span style="color:grey">69.5</span></td>
+    <td><span style="color: grey;">79.5</span></td> 
+    <td><span style="color: grey;">69.5</span></td>
   </tr>
   <tr>
     <td>DeepSeek-R1-Distill-Qwen-32B</td>
-    <td><span style="color:grey">72.6</span></td>
-    <td><span style="color:grey">49.6</span></td> 
+    <td><span style="color: grey;">72.6</span></td>
+    <td><span style="color: grey;">49.6</span></td> 
   </tr>
   <tr>
     <td>Skywork-OR1-32B</td>
-    <td><span style="color:grey">82.2</span></td>
-    <td><span style="color:grey">73.3</span></td>
+    <td><span style="color: grey;">82.2</span></td>
+    <td><span style="color: grey;">73.3</span></td>
   </tr>
   <tr>
     <td>AM-Thinking-v1</td>
-    <td><span style="color:grey">85.3</span></td>
-    <td><span style="color:grey">74.4</span></td>
+    <td><span style="color: grey;">85.3</span></td>
+    <td><span style="color: grey;">74.4</span></td>
   </tr>
   <tr>
     <td>OpenReasoning-Nemotron-32B</td>
-    <td><span style="color:grey">89.2</span></td>
-    <td><span style="color:grey">84.2</span></td>
+    <td><span style="color: grey;">89.2</span></td>
+    <td><span style="color: grey;">84.2</span></td>
   </tr>
   <tr>
     <td>PCL-Reasoner-v1</td>
-    <td><p style="font-weight:grey;">85.7</span></td> 
-    <td><p style="font-weight:grey;">84.2</span></td> 
+    <td><span style="color: grey; font-weight: bold;">85.7</span></td> 
+    <td><span style="color: grey; font-weight: bold;">84.2</span></td> 
   </tr>
   <tr>
     <td>PCL-Reasoner-v1.5</td>
-    <td><p style="font-weight: bold;">90.9</span></td> 
-    <td><p style="font-weight: bold;">85.7</span></td> 
+    <td><span style="color: green; font-weight: bold;">90.9</span></td> 
+    <td><span style="color: green; font-weight: bold;">85.7</span></td> 
   </tr>
 </table>
 
