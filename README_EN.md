@@ -534,6 +534,6 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
   title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning},
   author={Yao Lu, Deng Dong Fan, Jianzheng Nie, et al.},
   journal={arXiv preprint arXiv:2405.14524},
-  year={2024}
+  year={2026}
 }
 ```
