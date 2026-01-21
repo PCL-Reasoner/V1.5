@@ -2,6 +2,8 @@
 
 [中文文档](README_CN.md) | English
 
+![PCL-Reasoner-V1.5](./images/pcl_reasoner_v15.png)
+
 ## Model Overview
 
 PCL-Reasoner-V1.5 is a 32B-parameter large language model specifically designed for mathematical reasoning. The model is built upon Qwen2.5-32B-Base and trained through Supervised Fine-Tuning (SFT) and Reinforcement Learning (RL). A key innovation in our approach is the adoption of Offline RL (Offline Reinforcement Learning), which significantly enhances training efficiency compared to traditional online RL methods.
