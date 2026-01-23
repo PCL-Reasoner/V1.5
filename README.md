@@ -530,7 +530,7 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
 
 ```bibtex
 @article{PCL-Reasoner-v1.5,
-  title={PCL-Reasoner-V1.5: Advancing Math Reasoning with Offline Reinforcement Learning(https://arxiv.org/abs/2601.14716)},
+  title={PCL-Reasoner-V1.5: Advancing Math Reasoning with Offline Reinforcement Learning},
   author={Yao Lu, Dengdong Fan, Jianzheng Nie, Fan Xu, Jie Chen, Bin Zhou, Yonghong Tian},
   journal={arXiv preprint arXiv:2601.14716},
   year={2026}
