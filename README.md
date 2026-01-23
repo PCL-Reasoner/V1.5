@@ -1,4 +1,4 @@
-# **PCL-Reasoner-V1.5 Mathematical Reasoning Model**
+# **PCL-Reasoner-V1.5: Advancing Math Reasoning with Offline Reinforcement Learning**
 
 [中文文档](README_CN.md) | English
 
@@ -233,9 +233,8 @@ python preprocess_data.py \
 
 #### 3.3 Training Configuration
 
-We adopted an inspired training strategy. Global batch size was set to 128, with learning rate decaying from $6×10^{−5}$ to $1×10^{−7}$ following a cosine schedule, and a warm-up ratio of 0.05. AdamW optimizer parameters were configured as $\beta_1=0.9$ and $\beta_2=0.95$. Training was conducted on 16 Atlas 910C SuperPoD nodes (each containing 8 accelerators). The entire fine-tuning process involved 4 epochs and took approximately 116 hours. The corresponding training loss curves are shown in Figure \ref{fig:loss}.
-
-To maximize computational efficiency, we enabled data packing during the supervised fine-tuning phase. This feature allows concatenating samples of varying lengths within each batch into a preset sequence length (48K tokens). By merging multiple short sequences into one long sequence, we effectively eliminated redundant computation caused by sequence padding, significantly accelerating training speed.
+We trained for 800 steps with a global batch size of 128. Optimization was performed using AdamW with $\beta_{1}=0.9$, $\beta_{2}=0.95$ and a weight decay constant of 0.1. The learning rate followed a cosine schedule, starting at $1\times10^{-6}$ and decaying to $1\times10^{-7}$, with no warm-up phase. To preserve numerical precision, we trained in FP16 format rather than BF16.
+The training infrastructure consisted of 8 compute nodes, each equipped with 8 Huawei Ascend 910C NPUs. We adapted the MindSpeed-LLM framework  for training and scaled the model using tensor parallelism of degree 8 and pipeline parallelism of degree 4. Memory constraints were mitigated via activation recomputation and optimizer state swapping.
 
 #### 3.4 Launching Training
 
@@ -531,9 +530,9 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
 
 ```bibtex
 @article{PCL-Reasoner-v1.5,
-  title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning},
-  author={Yao Lu, Deng Dong Fan, Jianzheng Nie, et al.},
-  journal={arXiv preprint arXiv:2405.14524},
+  title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning(https://arxiv.org/abs/2601.14716)},
+  author={Yao Lu, Dengdong Fan, Jianzheng Nie, Fan Xu, Jie Chen, Bin Zhou, Yonghong Tian},
+  journal={arXiv preprint arXiv:2601.14716},
   year={2026}
 }
 ```
