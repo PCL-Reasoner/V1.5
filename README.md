@@ -257,13 +257,13 @@ Note: When converting to HuggingFace weights, you must set --target-tensor-paral
 After conversion is complete, the new HuggingFace format weights will be stored in the `~/local_dir/PCL-Reasoner/V1/mg2hf` directory. You can then load and perform inference using vllm, sglang, or huggingface frameworks.
 
 
-### 4. Evaluation Pipeline:
+## Evaluation Pipeline:
 
 We use [LLMEval](https://gitee.com/jianzhnie/LLMEval) to evaluate the model. LLMEval is an evaluation tool developed by our team, primarily designed for evaluating large model inference. It supports both vllm and sglang inference backends and multiple evaluation datasets. It has successfully reproduced the results of multiple open-source inference models in the Ascend environment. For more details, please refer to [LLMEval Usage Tutorial](https://gitee.com/jianzhnie/LLMEval).
 
-#### 4.1 Evaluation Environment Configuration
+### Evaluation Environment Configuration
 
-#### 4.1.1 Install vllm and vllm-ascend
+#### Install vllm and vllm-ascend
 
 Please refer to the [vllm documentation](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) and [vllm-ascend documentation](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) to install vllm and vllm-ascend environments.
 
@@ -275,7 +275,7 @@ pip install vllm==0.9.1
 pip install vllm-ascend==0.9.1
 ```
 
-#### 4.1.2 Configure llmeval Environment
+#### Configure llmeval Environment
 
 ```bash
 # Clone the LLMEval repository
@@ -288,7 +288,7 @@ pip install -e .
 ```
 
 
-#### 4.2 Start Evaluation
+### Start Evaluation
 
 ##### Step 1: Launch vLLM Server
 
@@ -416,7 +416,7 @@ echo "🎯 Evaluation completed successfully!"
 ```
 
 
-####  4.3 Evaluation Results
+### Evaluation Results
 
 Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
 
