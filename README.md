@@ -316,6 +316,7 @@ python -m vllm.entrypoints.openai.api_server \
     --gpu-memory-utilization $gpu_memory_utilization \
     --max-model-len $max_model_len  \
     --enforce-eager \
+    --dtype float16 \
     --port 8090
 ```
 
