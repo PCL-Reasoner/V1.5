@@ -10,9 +10,8 @@ We present PCL-Reasoner-V1.5, a 32-billion-parameter large language model (LLM) 
 
 
 
-### 2. Environment and Data Preparation
+## 2. Environment
 
-### 2.1 Environment
 
 | Software          | Version           |
 | ----------------- | ----------------- |
@@ -22,7 +21,7 @@ We present PCL-Reasoner-V1.5, a 32-billion-parameter large language model (LLM) 
 | vllm-ascend       | 0.9.1             |
 | MindSpeed-LLM     | commit: 887c2d868 |
 
-### 2.2 Base Model
+## 3. Base Model
 
 Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repository:
 
@@ -30,9 +29,9 @@ Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repos
 | --------------- | -------------------------------------------------------------------------------- |
 | PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
 
-### 2.3 Data
+## 4. Data
 
-#### 2.3.1 Raw Dataset Download
+#### 4.1 Raw Dataset Download
 
 In our preliminary work, we had already elevated the mathematical reasoning capabilities of PCL-Reasoner-V1 to a high level. To further optimize model performance, we selected challenging problems from NVIDIA's publicly available Nemotron-Post-Training-Dataset-v1 for subsequent reinforcement training.
 
@@ -40,7 +39,7 @@ In our preliminary work, we had already elevated the mathematical reasoning capa
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | nvidia/Nemotron-Post-Training-Dataset-v1 | [https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1](https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1) |
 
-#### 2.3.2 Data Preprocessing
+#### 4.2 Data Preprocessing
 
 After downloading, the dataset is in Parquet format. We first convert it to JSONL format for convenient subsequent processing.
 
@@ -80,7 +79,7 @@ Through statistical analysis, we discovered that in the Nemotron-Post-Training-D
 The final RL dataset can be found in [Huggingface Dataset](https://huggingface.co/datasets/PCL-Reasoner/V1.5-RL-Math)
 
    
-### 2.4 Inference
+## 5. Inference
 
 
 After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling, drawing 8 samples per problem to generate reasoning results. Sampling configuration is consistent with the evaluation settings below:
@@ -95,7 +94,7 @@ After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling
 
 After sampling, we obtained 48K CoT samples.
 
-### 2.5 Verification 
+## 6. Verification 
 
 
 Based on previous experience, we found that traditional methods using the Python `math_verify` package cannot effectively evaluate CoT answer correctness in all scenarios. For complex mathematical problems, rule-based matching approaches often produce various false judgments. Therefore, we employed the Qwen3-32B model to assess the correctness of CoT answers, with the specific approach as follows:
@@ -126,14 +125,14 @@ Please put your return value (0 or 1) as required above in the \boxed{} without 
 Finally, we obtained 22,990 positive samples and 25,522 negative samples.
 
 
-### 2.6 Training 
+## 7. Training 
 
 PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipeline implemented on the MindSpeed-LLM framework. We primarily added `opg_trainer.py` and incorporated a `reward` keyword in dataset processing. To facilitate reproducibility for the open-source community, we have packaged the entire training code in the `MindSpeed-LLM` directory.
 
 
 Our training is based on the MindSpeed-LLM framework and includes the following steps:
 
-##### 2.6.1 Convert Model Weights Format
+### 7.1 Convert Model Weights Format
 
 The MindSpeed-LLM framework is built on MindSpeed and reads weights in mcore format. Before training, HuggingFace weights need to be converted to Mcore format. The script can be launched with bash, and configuration parameters can be adjusted according to your environment. The launch command and configuration parameters are as follows:
 
@@ -175,7 +174,7 @@ python convert_ckpt.py \
 
 
 
-#### 2.6.2 Dataset Conversion
+### 7.2 Dataset Conversion
 
 After inference, we obtained 48K CoT samples in JSONL format, containing the problem, inference results, and corresponding CoT for the inference results. These need to be converted to a format readable by MindSpeed-LLM:
 
@@ -212,13 +211,12 @@ python preprocess_data.py \
 - `cache-dir`: Cache directory
 - `map-keys`: Field mapping for the input JSONL file
 
-
-#### 2.6.3 Training Configuration
+### 7.3 Training Configuration
 
 We trained for 800 steps with a global batch size of 128. Optimization was performed using AdamW with $\beta_{1}=0.9$, $\beta_{2}=0.95$ and a weight decay constant of 0.1. The learning rate followed a cosine schedule, starting at $1\times10^{-6}$ and decaying to $1\times10^{-7}$, with no warm-up phase. To preserve numerical precision, we trained in FP16 format rather than BF16.
 The training infrastructure consisted of 8 compute nodes, each equipped with 8 Huawei Ascend 910C NPUs. We adapted the MindSpeed-LLM framework  for training and scaled the model using tensor parallelism of degree 8 and pipeline parallelism of degree 4. Memory constraints were mitigated via activation recomputation and optimizer state swapping.
 
-#### 2.6.4 Launching Training
+### 7.4 Launching Training
 
 The training process consists of three steps:
 
@@ -226,7 +224,7 @@ The training process consists of three steps:
 2. Launch training: `cd MindSpeed-LLM; bash scripts/lauch_multi_nodes.sh node_list.txt`
 
 
-#### 2.6.5 Converting Model Weights to HuggingFace Format
+### 7.5 Converting Model Weights to HuggingFace Format
 
 After training is complete, weights need to be converted from Megatron-LM format to HuggingFace standard format, ensuring they can be used for continued training and inference in the HuggingFace environment. The weight conversion script is as follows:
 
@@ -248,11 +246,11 @@ Note: When converting to HuggingFace weights, you must set --target-tensor-paral
 After conversion is complete, the new HuggingFace format weights will be stored in the `~/local_dir/PCL-Reasoner/V1/mg2hf` directory. You can then load and perform inference using vllm, sglang, or huggingface frameworks.
 
 
-### 2.7 Evaluation
+### 8 Evaluation
 
 We use [LLMEval](https://gitee.com/jianzhnie/LLMEval) to evaluate the model. LLMEval is an evaluation tool developed by our team, primarily designed for evaluating large model inference. It supports both vllm and sglang inference backends and multiple evaluation datasets. It has successfully reproduced the results of multiple open-source inference models in the Ascend environment. For more details, please refer to [LLMEval Usage Tutorial](https://gitee.com/jianzhnie/LLMEval).
 
-#### 2.7.1 Evaluation Environment Configuration
+### 8.1 Evaluation Environment Configuration
 
 ##### Step 1: Install vllm and vllm-ascend
 
@@ -279,7 +277,7 @@ pip install -e .
 ```
 
 
-#### 2.7.2 Start Evaluation
+#### 8.2 Start Evaluation
 
 ##### Step 1: Launch vLLM Server
 
@@ -408,7 +406,7 @@ echo "🎯 Evaluation completed successfully!"
 ```
 
 
-## 3. Evaluation Results
+### 8.3 Evaluation Results
 
 Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
 
