@@ -13,7 +13,7 @@ PCL-Reasoner-V1.5 demonstrates outstanding performance among 32B-scale models on
 - Achieves 90.9% average accuracy on the AIME 2024 benchmark
 - Achieves 85.7% average accuracy on the AIME 2025 benchmark
 
-All experiments were conducted on Huawei Ascend NPU using only publicly available datasets.
+All experiments were conducted on Huawei Ascend NPU using only publicly available datasets. To ensure precision stability, all training and evaluation were performed using FP16 precision.
 
 To promote technology sharing and application, we have fully open-sourced the PCL-Reasoner-V1.5 model weights, data processing scripts, and training code. This model represents one of the leading 32B mathematical reasoning models today and provides developers with valuable practical experience in offline reinforcement learning for specialized domains and post-training solutions. Users can easily deploy and experience the model by following the tutorials below, and explore the practical methods and techniques of post-training!
 
