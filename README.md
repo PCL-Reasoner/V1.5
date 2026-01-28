@@ -75,7 +75,7 @@ Through statistical analysis, we discovered that in the Nemotron-Post-Training-D
    ```
    After final processing, we obtained approximately 6K unique problems.
 
-   (Huggingface Dataset)[https://huggingface.co/datasets/PCL-Reasoner/V1.5-RL-Math]
+The final RL dataset can be found in [https://huggingface.co/datasets/PCL-Reasoner/V1.5-RL-Math]
 
    
 ### 2.4 Inference
