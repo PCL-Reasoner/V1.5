@@ -17,7 +17,6 @@ PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipe
 
 ### 2. Environment and Data Preparation
 
-#### 2.1 Environment Setup:
 ### 2.1 Environment
 
 | Software          | Version           |
