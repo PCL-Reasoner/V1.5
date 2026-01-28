@@ -443,8 +443,8 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
   </tr>
   <tr>
     <td>OpenAI-o3</td>
-    <td><span style="font-weight: bold;">91.6</span></td>
-    <td><span style="font-weight: bold;">88.9</span></td>
+    <td><span style="font-weight: bold;"><strong>91.6</strong></span></td>
+    <td><span style="font-weight: bold;"><strong>88.9</strong></span></td>
   </tr>
   <tr>
     <td>Gemini-2.5-Pro-0506</td>
@@ -497,8 +497,8 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
   </tr>
   <tr>
     <td>PCL-Reasoner-v1.5</td>
-    <td><span style="font-weight: bold;">90.9</span></td> 
-    <td><span style="font-weight: bold;">85.7</span></td> 
+    <td><span style="font-weight: bold;"><strong>90.9</strong></span></td> 
+    <td><span style="font-weight: bold;"><strong>85.7</strong></span></td> 
   </tr>
 </table>
 </div>
