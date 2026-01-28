@@ -9,11 +9,6 @@
 We present PCL-Reasoner-V1.5, a 32-billion-parameter large language model (LLM) for mathematical reasoning. The model is built upon Qwen2.5-32B and refined via supervised fine-tuning (SFT) followed by reinforcement learning (RL). A central innovation is our proposed offline RL method, which provides superior training stability and efficiency over standard online RL methods such as GRPO. Our model achieves state-of-the-art performance among models post-trained on Qwen2.5-32B, attaining average accuracies of 90.9% on AIME 2024 and 85.6% on AIME 2025. Our work demonstrates offline RL as a stable and efficient paradigm for advancing reasoning in LLMs. All experiments were conducted on Huawei Ascend 910C NPUs.
 
 
-## Development Guide
-
-### 1. Training Code
-
-PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipeline implemented on the MindSpeed-LLM framework. We primarily added `opg_trainer.py` and incorporated a `reward` keyword in dataset processing. To facilitate reproducibility for the open-source community, we have packaged the entire training code in the `MindSpeed-LLM` directory.
 
 ### 2. Environment and Data Preparation
 
