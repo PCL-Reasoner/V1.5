@@ -415,93 +415,91 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
 
 <div class="table-wrapper">
 <table>
-  <thead>
-    <tr>
-      <th>Model Scale</th>
-      <th>Model</th>
-      <th>AIME 24</th>
-      <th>AIME 25</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Merged row header &gt;100B -->
-    <tr>
-      <th class="row-label" rowspan="6" scope="rowgroup">&gt;100B</th>
-    </tr>
-    <tr>
-      <td>DeepSeek-R1</td>
-      <td class="score"> <span style="color: grey;">79.8</td>
-      <td class="score"> <span style="color: grey;">70</td>
-    </tr>
-    <tr>
-      <td>DeepSeek-R1-0528</td>
-      <td class="score--high"><span style="color: red; font-weight: bold;">91.4</td>
-      <td class="score--high"><span style="color: red; font-weight: bold;">87.5</td>
-    </tr>
-    <tr>
-      <td>Qwen3-235B-A22B</td>
-      <td class="score"><span style="color: grey;">85.7</td>
-      <td class="score"><span style="color: grey;">81.5</td>
-    </tr>
-    <tr>
-      <td>OpenAI-o3</td>
-      <td class="score--high"><span style="color: red; font-weight: bold;">91.6</td>
-      <td class="score--high"><span style="color: red; font-weight: bold;">88.9</td>
-    </tr>
-    <tr>
-      <td>Gemini-2.5-Pro-0506</td>
-      <td class="score--high"><span style="color: red; font-weight: bold;">90.8</td>
-      <td class="score">83</td>
-    </tr>
-    <!-- Separator row -->
-    <tr class="separator">
-      <td colspan="4"></td>
-    </tr>
-    <!-- Merged row header 32B -->
-    <tr>
-      <th class="row-label" rowspan="9" scope="rowgroup">32B</th>
-    </tr>
-    <tr>
-      <td>Qwen3-32B</td>
-      <td class="score"><span style="color: grey;">81.4</td>
-      <td class="score"><span style="color: grey;">72.9</td>
-    </tr>
-    <tr>
-      <td>QwQ-32B</td>
-      <td class="score"><span style="color: grey;">79.5</td>
-      <td class="score"><span style="color: grey;">69.5</td>
-    </tr>
-    <tr>
-      <td>DeepSeek-R1-Distill-Qwen-32B</td>
-      <td class="score"><span style="color: grey;">72.6</td>
-      <td class="score"><span style="color: grey;">49.6</td>
-    </tr>
-    <tr>
-      <td>Skywork-OR1-32B</td>
-      <td class="score"><span style="color: grey;">82.2</td>
-      <td class="score"><span style="color: grey;">73.3</td>
-    </tr>
-    <tr>
-      <td>AM-Thinking-v1</td>
-      <td class="score"><span style="color: grey;">85.3</td>
-      <td class="score"><span style="color: grey;">74.4</td>
-    </tr>
-    <tr>
-      <td>OpenReasoning-Nemotron-32B</td>
-      <td class="score"><span style="color: grey;">89.2</td>
-      <td class="score"><span style="color: grey;">84.2</td>
-    </tr>
-    <tr>
-      <td>PCL-Reasoner-v1</td>
-      <td class="score"><span style="color: grey;">85.7</td>
-      <td class="score"><span style="color: grey;">84.2</td>
-    </tr>
-    <tr>
-      <td>PCL-Reasoner-v1.5</td>
-      <td class="score--high"><span style="color: green; font-weight: bold;">90.9</td>
-      <td class="score--high"><span style="color: green; font-weight: bold;">85.7</td>
-    </tr>
-  </tbody>
+  <tr>
+    <th>Model Scale</th>
+    <th>Model</th>
+    <th>AIME 24</th>
+    <th>AIME 25</th>
+  </tr>
+  <!-- Merged row header >100B -->
+  <tr>
+    <th rowspan="6">&gt;100B</th>
+  </tr>
+  <!-- >100B data rows -->
+  <tr>
+    <td>DeepSeek-R1</td>
+    <td><span style="color:grey">79.8</span></td>
+    <td><span style="color:grey">70</span></td>
+  </tr>
+  <tr>
+    <td>DeepSeek-R1-0528</td>
+    <td><span style="color:grey">91.4</span></td>
+    <td><span style="color:grey">87.5</span></td>
+  </tr>
+  <tr>
+    <td>Qwen3-235B-A22B</td>
+    <td><span style="color:grey">85.7</span></td>
+    <td><span style="color:grey">81.5</span></td>
+  </tr>
+  <tr>
+    <td>OpenAI-o3</td>
+    <td><span style="font-weight: bold;">91.6</span></td>
+    <td><span style="font-weight: bold;">88.9</span></td>
+  </tr>
+  <tr>
+    <td>Gemini-2.5-Pro-0506</td>
+    <td><span style="color:grey">90.8</span></td>
+    <td><span style="color:grey">83</span></td>
+  </tr>
+  <!-- Separator row -->
+  <tr>
+    <td colspan="4"></td>
+  </tr>
+  <!-- Merged row header 32B -->
+  <tr>
+    <th rowspan="9">32B</th>
+  </tr>
+  <!-- 32B data rows -->
+  <tr>
+    <td>Qwen3-32B</td>
+    <td><span style="color:grey">81.4</span></td>
+    <td><span style="color:grey">72.9</span></td>
+  </tr>
+  <tr>
+    <td>QwQ-32B</td>
+    <td><span style="color:grey">79.5</span></td> 
+    <td><span style="color:grey">69.5</span></td>
+  </tr>
+  <tr>
+    <td>DeepSeek-R1-Distill-Qwen-32B</td>
+    <td><span style="color:grey">72.6</span></td>
+    <td><span style="color:grey">49.6</span></td> 
+  </tr>
+  <tr>
+    <td>Skywork-OR1-32B</td>
+    <td><span style="color:grey">82.2</span></td>
+    <td><span style="color:grey">73.3</span></td>
+  </tr>
+  <tr>
+    <td>AM-Thinking-v1</td>
+    <td><span style="color:grey">85.3</span></td>
+    <td><span style="color:grey">74.4</span></td>
+  </tr>
+  <tr>
+    <td>OpenReasoning-Nemotron-32B</td>
+    <td><span style="color:grey">89.2</span></td>
+    <td><span style="color:grey">84.2</span></td>
+  </tr>
+  <tr>
+    <td>PCL-Reasoner-v1</td>
+    <td><span style="color:grey">85.7</span></td> 
+    <td><span style="color:grey">84.2</span></td> 
+  </tr>
+  <tr>
+    <td>PCL-Reasoner-v1.5</td>
+    <td><span style="font-weight: bold;">90.9</span></td> 
+    <td><span style="font-weight: bold;">85.7</span></td> 
+  </tr>
 </table>
 </div>
 
