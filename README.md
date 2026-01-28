@@ -405,7 +405,7 @@ echo "🎯 Evaluation completed successfully!"
 ```
 
 
-#### 2.7.3 Evaluation Results
+## 3. Evaluation Results
 
 Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
 
