@@ -4,33 +4,23 @@
 
 ![PCL-Reasoner-V1.5](./images/pcl_reasoner_v15.png)
 
-## Overview
+## 1. Overview
 
 We present PCL-Reasoner-V1.5, a 32-billion-parameter large language model (LLM) for mathematical reasoning. The model is built upon Qwen2.5-32B and refined via supervised fine-tuning (SFT) followed by reinforcement learning (RL). A central innovation is our proposed offline RL method, which provides superior training stability and efficiency over standard online RL methods such as GRPO. Our model achieves state-of-the-art performance among models post-trained on Qwen2.5-32B, attaining average accuracies of 90.9% on AIME 2024 and 85.6% on AIME 2025. Our work demonstrates offline RL as a stable and efficient paradigm for advancing reasoning in LLMs. All experiments were conducted on Huawei Ascend 910C NPUs.
 
 
-## Development Guide
 
-### 1. Training Code
+## 2. Base Model
 
-PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipeline implemented on the MindSpeed-LLM framework. We primarily added `opg_trainer.py` and incorporated a `reward` keyword in dataset processing. To facilitate reproducibility for the open-source community, we have packaged the entire training code in the `MindSpeed-LLM` directory.
+Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repository:
 
-### 2. Environment and Data Preparation
+| Model Name      | Weights Link                                                                     |
+| --------------- | -------------------------------------------------------------------------------- |
+| PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
 
-#### 2.1 Environment Setup:
+## 3. Data
 
-| Software          | Version           |
-| ----------------- | ----------------- |
-| Firmware & Driver | 24.1.rc3.5        |
-| CANN              | 8.3.RC1           |
-| Python            | 3.10              |
-| vllm-ascend       | 0.9.1             |
-| MindSpeed-LLM     | commit: 887c2d868 |
-
-
-#### 2.2 Data Processing
-
-##### 2.2.1 Dataset Download
+##### 3.1 Raw Dataset Download
 
 In our preliminary work, we had already elevated the mathematical reasoning capabilities of PCL-Reasoner-V1 to a high level. To further optimize model performance, we selected challenging problems from NVIDIA's publicly available Nemotron-Post-Training-Dataset-v1 for subsequent reinforcement training.
 
@@ -38,7 +28,7 @@ In our preliminary work, we had already elevated the mathematical reasoning capa
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | nvidia/Nemotron-Post-Training-Dataset-v1 | [https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1](https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1) |
 
-##### 2.2.2 Data Preprocessing
+##### 3.2 Data Preprocessing
 
 After downloading, the dataset is in Parquet format. We first convert it to JSONL format for convenient subsequent processing.
 
@@ -75,8 +65,13 @@ Through statistical analysis, we discovered that in the Nemotron-Post-Training-D
    ```
    After final processing, we obtained approximately 6K unique problems.
 
+   (Huggingface Dataset)[https://huggingface.co/datasets/PCL-Reasoner/V1.5-RL-Math]
 
-##### 2.2.3 Model Sampling
+   
+
+## 4. Inference
+
+##### 4.1 Model Sampling
 
 After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling, drawing 8 samples per problem to generate reasoning results. Sampling configuration is consistent with the evaluation settings below:
 
@@ -90,9 +85,11 @@ After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling
 
 After sampling, we obtained 48K CoT samples.
 
-##### 2.2.4 Evaluating Correctness of Sampled CoT
+## 5. Verification 
 
-Based on previous training experience, we found that traditional methods using the Python `math_verify` package cannot effectively evaluate CoT answer correctness in all scenarios. For complex mathematical problems, rule-based matching approaches often produce various false judgments. Therefore, we employed the Qwen3-32B model to assess the correctness of CoT answers, with the specific approach as follows:
+
+
+Based on previous experience, we found that traditional methods using the Python `math_verify` package cannot effectively evaluate CoT answer correctness in all scenarios. For complex mathematical problems, rule-based matching approaches often produce various false judgments. Therefore, we employed the Qwen3-32B model to assess the correctness of CoT answers, with the specific approach as follows:
 
 1. We designed specialized prompts for the `Qwen3-32B` model to determine whether the final answer contained in the CoT is consistent with the `ground truth` provided by the problem;
 2. We deployed the `Qwen3-32B` model to perform inference evaluation on 48K problems;
@@ -119,13 +116,28 @@ Please put your return value (0 or 1) as required above in the \boxed{} without 
 
 Finally, we obtained 22,990 positive samples and 25,522 negative samples.
 
-#### 2.3 Model Weights Preparation
 
-Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repository:
 
-| Model Name      | Weights Link                                                                     |
-| --------------- | -------------------------------------------------------------------------------- |
-| PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
+
+### Training 
+
+PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipeline implemented on the MindSpeed-LLM framework. We primarily added `opg_trainer.py` and incorporated a `reward` keyword in dataset processing. To facilitate reproducibility for the open-source community, we have packaged the entire training code in the `MindSpeed-LLM` directory.
+
+### 2. Environment and Data Preparation
+
+#### 2.1 Environment Setup:
+
+| Software          | Version           |
+| ----------------- | ----------------- |
+| Firmware & Driver | 24.1.rc3.5        |
+| CANN              | 8.3.RC1           |
+| Python            | 3.10              |
+| vllm-ascend       | 0.9.1             |
+| MindSpeed-LLM     | commit: 887c2d868 |
+
+
+
+##### 2.2.4 Evaluating Correctness of Sampled CoT
 
 ### 3 Training Pipeline
 
