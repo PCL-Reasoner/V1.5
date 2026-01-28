@@ -4,18 +4,9 @@
 
 ![PCL-Reasoner-V1.5](./images/pcl_reasoner_v15.png)
 
-## Model Overview
+## Overview
 
-PCL-Reasoner-V1.5 is a 32B-parameter large language model specifically designed for mathematical reasoning. The model is built upon Qwen2.5-32B-Base and trained through Supervised Fine-Tuning (SFT) and Reinforcement Learning (RL). A key innovation in our approach is the adoption of Offline RL (Offline Reinforcement Learning), which significantly enhances training efficiency compared to traditional online RL methods.
-
-PCL-Reasoner-V1.5 demonstrates outstanding performance among 32B-scale models on public datasets:
-
-- Achieves 90.9% average accuracy on the AIME 2024 benchmark
-- Achieves 85.7% average accuracy on the AIME 2025 benchmark
-
-All experiments were conducted on Huawei Ascend NPU using only publicly available datasets.
-
-To promote technology sharing and application, we have fully open-sourced the PCL-Reasoner-V1.5 model weights, data processing scripts, and training code. This model represents one of the leading 32B mathematical reasoning models today and provides developers with valuable practical experience in offline reinforcement learning for specialized domains and post-training solutions. Users can easily deploy and experience the model by following the tutorials below, and explore the practical methods and techniques of post-training!
+We present PCL-Reasoner-V1.5, a 32-billion-parameter large language model (LLM) for mathematical reasoning. The model is built upon Qwen2.5-32B and refined via supervised fine-tuning (SFT) followed by reinforcement learning (RL). A central innovation is our proposed offline RL method, which provides superior training stability and efficiency over standard online RL methods such as GRPO. Our model achieves state-of-the-art performance among models post-trained on Qwen2.5-32B, attaining average accuracies of 90.9% on AIME 2024 and 85.6% on AIME 2025. Our work demonstrates offline RL as a stable and efficient paradigm for advancing reasoning in LLMs. All experiments were conducted on Huawei Ascend 910C NPUs.
 
 
 ## Development Guide
