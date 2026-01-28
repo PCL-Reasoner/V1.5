@@ -1,14 +1,14 @@
-# **PCL-Reasoner-V1.5 Mathematical Reasoning Model**
+# **PCL-Reasoner-V1.5: Advancing Math Reasoning with Offline Reinforcement Learning**
 
 [中文文档](README_CN.md) | English
 
 ![PCL-Reasoner-V1.5](./images/pcl_reasoner_v15.png)
 
-## Model Overview
+## 1. Overview
 
-PCL-Reasoner-V1.5 is a 32B-parameter large language model specifically designed for mathematical reasoning. The model is built upon Qwen2.5-32B-Base and trained through Supervised Fine-Tuning (SFT) and Reinforcement Learning (RL). A key innovation in our approach is the adoption of Offline RL (Offline Reinforcement Learning), which significantly enhances training efficiency compared to traditional online RL methods.
+We present PCL-Reasoner-V1.5, a 32-billion-parameter large language model (LLM) for mathematical reasoning. The model is built upon Qwen2.5-32B and refined via supervised fine-tuning (SFT) followed by reinforcement learning (RL). A central innovation is our proposed offline RL method, which provides superior training stability and efficiency over standard online RL methods such as GRPO. Our model achieves state-of-the-art performance among models post-trained on Qwen2.5-32B, attaining average accuracies of 90.9% on AIME 2024 and 85.6% on AIME 2025. Our work demonstrates offline RL as a stable and efficient paradigm for advancing reasoning in LLMs. All experiments were conducted on Huawei Ascend 910C NPUs.
 
-PCL-Reasoner-V1.5 demonstrates outstanding performance among 32B-scale models on public datasets:
+## 2. Reproduction Guidance
 
 - Achieves 90.9% average accuracy on the AIME 2024 benchmark
 - Achieves 85.7% average accuracy on the AIME 2025 benchmark
@@ -27,6 +27,7 @@ PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipe
 ### 2. Environment and Data Preparation
 
 #### 2.1 Environment Setup:
+### 2.1 Environment
 
 | Software          | Version           |
 | ----------------- | ----------------- |
@@ -36,10 +37,17 @@ PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipe
 | vllm-ascend       | 0.9.1             |
 | MindSpeed-LLM     | commit: 887c2d868 |
 
+### 2.2 Base Model
 
-#### 2.2 Data Processing
+Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repository:
 
-##### 2.2.1 Dataset Download
+| Model Name      | Weights Link                                                                     |
+| --------------- | -------------------------------------------------------------------------------- |
+| PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
+
+### 2.3 Data
+
+#### 2.3.1 Raw Dataset Download
 
 In our preliminary work, we had already elevated the mathematical reasoning capabilities of PCL-Reasoner-V1 to a high level. To further optimize model performance, we selected challenging problems from NVIDIA's publicly available Nemotron-Post-Training-Dataset-v1 for subsequent reinforcement training.
 
@@ -47,7 +55,7 @@ In our preliminary work, we had already elevated the mathematical reasoning capa
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | nvidia/Nemotron-Post-Training-Dataset-v1 | [https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1](https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1) |
 
-##### 2.2.2 Data Preprocessing
+#### 2.3.2 Data Preprocessing
 
 After downloading, the dataset is in Parquet format. We first convert it to JSONL format for convenient subsequent processing.
 
@@ -84,8 +92,11 @@ Through statistical analysis, we discovered that in the Nemotron-Post-Training-D
    ```
    After final processing, we obtained approximately 6K unique problems.
 
+The final RL dataset can be found in [Huggingface Dataset](https://huggingface.co/datasets/PCL-Reasoner/V1.5-RL-Math)
 
-##### 2.2.3 Model Sampling
+   
+### 2.4 Inference
+
 
 After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling, drawing 8 samples per problem to generate reasoning results. Sampling configuration is consistent with the evaluation settings below:
 
@@ -99,9 +110,10 @@ After obtaining the 6K dataset, we used the `PCL-Reasoner-V1` model for sampling
 
 After sampling, we obtained 48K CoT samples.
 
-##### 2.2.4 Evaluating Correctness of Sampled CoT
+### 2.5 Verification 
 
-Based on previous training experience, we found that traditional methods using the Python `math_verify` package cannot effectively evaluate CoT answer correctness in all scenarios. For complex mathematical problems, rule-based matching approaches often produce various false judgments. Therefore, we employed the Qwen3-32B model to assess the correctness of CoT answers, with the specific approach as follows:
+
+Based on previous experience, we found that traditional methods using the Python `math_verify` package cannot effectively evaluate CoT answer correctness in all scenarios. For complex mathematical problems, rule-based matching approaches often produce various false judgments. Therefore, we employed the Qwen3-32B model to assess the correctness of CoT answers, with the specific approach as follows:
 
 1. We designed specialized prompts for the `Qwen3-32B` model to determine whether the final answer contained in the CoT is consistent with the `ground truth` provided by the problem;
 2. We deployed the `Qwen3-32B` model to perform inference evaluation on 48K problems;
@@ -128,30 +140,15 @@ Please put your return value (0 or 1) as required above in the \boxed{} without 
 
 Finally, we obtained 22,990 positive samples and 25,522 negative samples.
 
-#### 2.3 Model Weights Preparation
 
-Users can download `PCL-Reasoner-V1` weights from the official HuggingFace repository:
+### 2.6 Training 
 
-| Model Name      | Weights Link                                                                     |
-| --------------- | -------------------------------------------------------------------------------- |
-| PCL-Reasoner-V1 | [https://huggingface.co/PCL-Reasoner/V1](https://huggingface.co/PCL-Reasoner/V1) |
+PCL-Reasoner-V1.5 is fine-tuned based on PCL-Reasoner-V1, with the training pipeline implemented on the MindSpeed-LLM framework. We primarily added `opg_trainer.py` and incorporated a `reward` keyword in dataset processing. To facilitate reproducibility for the open-source community, we have packaged the entire training code in the `MindSpeed-LLM` directory.
 
-### 3 Training Pipeline
 
 Our training is based on the MindSpeed-LLM framework and includes the following steps:
 
-#### 3.1 Model Weights Conversion
-
-##### 3.1.1 Download HuggingFace Model Weights
-
-Download the PCL-Reasoner/V1 model weights from HuggingFace to your local machine.
-
-```bash
-# download  model
-huggingface-cli download  PCL-Reasoner/V1  --local-dir ~/local_dir/PCL-Reasoner/V1
-```
-
-##### 3.1.2 Convert Model Weights Format
+##### 2.6.1 Convert Model Weights Format
 
 The MindSpeed-LLM framework is built on MindSpeed and reads weights in mcore format. Before training, HuggingFace weights need to be converted to Mcore format. The script can be launched with bash, and configuration parameters can be adjusted according to your environment. The launch command and configuration parameters are as follows:
 
@@ -193,7 +190,7 @@ python convert_ckpt.py \
 
 
 
-#### 3.2 Dataset Conversion
+#### 2.6.2 Dataset Conversion
 
 After inference, we obtained 48K CoT samples in JSONL format, containing the problem, inference results, and corresponding CoT for the inference results. These need to be converted to a format readable by MindSpeed-LLM:
 
@@ -231,13 +228,12 @@ python preprocess_data.py \
 - `map-keys`: Field mapping for the input JSONL file
 
 
-#### 3.3 Training Configuration
+#### 2.6.3 Training Configuration
 
-We adopted an inspired training strategy. Global batch size was set to 128, with learning rate decaying from $6×10^{−5}$ to $1×10^{−7}$ following a cosine schedule, and a warm-up ratio of 0.05. AdamW optimizer parameters were configured as $\beta_1=0.9$ and $\beta_2=0.95$. Training was conducted on 16 Atlas 910C SuperPoD nodes (each containing 8 accelerators). The entire fine-tuning process involved 4 epochs and took approximately 116 hours. The corresponding training loss curves are shown in Figure \ref{fig:loss}.
+We trained for 800 steps with a global batch size of 128. Optimization was performed using AdamW with $\beta_{1}=0.9$, $\beta_{2}=0.95$ and a weight decay constant of 0.1. The learning rate followed a cosine schedule, starting at $1\times10^{-6}$ and decaying to $1\times10^{-7}$, with no warm-up phase. To preserve numerical precision, we trained in FP16 format rather than BF16.
+The training infrastructure consisted of 8 compute nodes, each equipped with 8 Huawei Ascend 910C NPUs. We adapted the MindSpeed-LLM framework  for training and scaled the model using tensor parallelism of degree 8 and pipeline parallelism of degree 4. Memory constraints were mitigated via activation recomputation and optimizer state swapping.
 
-To maximize computational efficiency, we enabled data packing during the supervised fine-tuning phase. This feature allows concatenating samples of varying lengths within each batch into a preset sequence length (48K tokens). By merging multiple short sequences into one long sequence, we effectively eliminated redundant computation caused by sequence padding, significantly accelerating training speed.
-
-#### 3.4 Launching Training
+#### 2.6.4 Launching Training
 
 The training process consists of three steps:
 
@@ -245,7 +241,7 @@ The training process consists of three steps:
 2. Launch training: `cd MindSpeed-LLM; bash scripts/lauch_multi_nodes.sh node_list.txt`
 
 
-#### 3.5 Converting Model Weights to HuggingFace Format
+#### 2.6.5 Converting Model Weights to HuggingFace Format
 
 After training is complete, weights need to be converted from Megatron-LM format to HuggingFace standard format, ensuring they can be used for continued training and inference in the HuggingFace environment. The weight conversion script is as follows:
 
@@ -267,13 +263,13 @@ Note: When converting to HuggingFace weights, you must set --target-tensor-paral
 After conversion is complete, the new HuggingFace format weights will be stored in the `~/local_dir/PCL-Reasoner/V1/mg2hf` directory. You can then load and perform inference using vllm, sglang, or huggingface frameworks.
 
 
-### 4. Evaluation Pipeline:
+### 2.7 Evaluation
 
 We use [LLMEval](https://gitee.com/jianzhnie/LLMEval) to evaluate the model. LLMEval is an evaluation tool developed by our team, primarily designed for evaluating large model inference. It supports both vllm and sglang inference backends and multiple evaluation datasets. It has successfully reproduced the results of multiple open-source inference models in the Ascend environment. For more details, please refer to [LLMEval Usage Tutorial](https://gitee.com/jianzhnie/LLMEval).
 
-#### 4.1 Evaluation Environment Configuration
+#### 2.7.1 Evaluation Environment Configuration
 
-#### 4.1.1 Install vllm and vllm-ascend
+##### Step 1: Install vllm and vllm-ascend
 
 Please refer to the [vllm documentation](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) and [vllm-ascend documentation](https://vllm-ascend.readthedocs.io/en/latest/getting_started/installation.html) to install vllm and vllm-ascend environments.
 
@@ -285,7 +281,7 @@ pip install vllm==0.9.1
 pip install vllm-ascend==0.9.1
 ```
 
-#### 4.1.2 Configure llmeval Environment
+##### Step 2: Configure llmeval Environment
 
 ```bash
 # Clone the LLMEval repository
@@ -298,7 +294,7 @@ pip install -e .
 ```
 
 
-#### 4.2 Start Evaluation
+#### 2.7.2 Start Evaluation
 
 ##### Step 1: Launch vLLM Server
 
@@ -426,7 +422,7 @@ echo "🎯 Evaluation completed successfully!"
 ```
 
 
-####  4.3 Evaluation Results
+## 3. Evaluation Results
 
 Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
 
@@ -531,9 +527,9 @@ Detailed evaluation results on AIME24/AIME25 are shown in the table below. To en
 
 ```bibtex
 @article{PCL-Reasoner-v1.5,
-  title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning},
-  author={Yao Lu, Deng Dong Fan, Jianzheng Nie, et al.},
-  journal={arXiv preprint arXiv:2405.14524},
+  title={PCL-Reasoner-V1.5: Advancing Math Reasoning with Offline Reinforcement Learning},
+  author={Yao Lu, Dengdong Fan, Jianzheng Nie, Fan Xu, Jie Chen, Bin Zhou, Yonghong Tian},
+  journal={arXiv preprint arXiv:2601.14716},
   year={2026}
 }
 ```

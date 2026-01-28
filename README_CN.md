@@ -230,9 +230,7 @@ python preprocess_data.py \
 
 #### 3.3 训练配置
 
-我们采用了一种受启发的训练策略。全局批大小（global batch size）设为 128，学习率从$6×10^{−5}$按照余弦衰减调度降至 $1×10^{−7}$，并设置了 0.05 的预热比例（warm-up ratio）。AdamW 优化器的动量参数配置为 $\beta_1=0.9$ 和 $\beta_2=0.95$。训练在 16 台 Atlas 910C SuperPoD 节点（每台包含 8 个芯片）上进行。整个微调过程共进行了 4 个 epoch，耗时约 116 小时。相应的训练损失曲线如图 \ref{fig:loss} 所示。
-
-为了最大化计算效率，我们在监督微调阶段启用了数据打包（data packing）功能。该功能允许将每个批次中长度各异的样本拼接合并，填入预设的序列长度（48K tokens）中。通过将多个短序列合并为一个长序列，有效消除了因序列填充（padding）带来的冗余计算，显著加快了训练速度。
+我们以128的全局批次大小进行了800步训练。优化采用AdamW算法，其中β₁=0.9、β₂=0.95，权重衰减常数为0.1。学习率按余弦调度，从1×10⁻⁶开始衰减至1×10⁻⁷，未设置预热阶段。为保持数值精度，训练采用FP16格式而非BF16。训练基础设施包含8个计算节点，每个节点配备8块华为昇腾910C NPU。我们采用MindSpeed-LLM框架进行训练，并通过8度张量并行与4度流水线并行实现模型扩展。通过激活重计算和优化器状态交换技术缓解了内存限制。
 
 #### 3.4 启动训练
 
@@ -524,9 +522,9 @@ echo "🎯 Evaluation completed successfully!"
 
 ```bibtex
 @article{PCL-Reasoner-v1.5,
-  title={PCL-Reasoner-v1.5: A Math Problem Solver with Chain of Thought Reasoning},
-  author={Yao Lu, Deng Dong Fan, Jianzheng Nie, et al.},
-  journal={arXiv preprint arXiv:2405.14524},
+  title={PCL-Reasoner-V1.5: Advancing Math Reasoning with Offline Reinforcement Learning},
+  author={Yao Lu, Dengdong Fan, Jianzheng Nie, Fan Xu, Jie Chen, Bin Zhou, Yonghong Tian},
+  journal={arXiv preprint arXiv:2601.14716},
   year={2026}
 }
 ```
