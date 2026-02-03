@@ -364,6 +364,7 @@ The evaluation hyperparameters we used are shown in the table below:
 | top_k                   | 40         |
 | top_p                   | 0.95       |
 | max_model_len           | 131072     |
+| dtype                   | fp16       |
 | system_prompt_type      | amthinking |
 
 ##### Step 3: Evaluation Scoring
