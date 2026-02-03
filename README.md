@@ -408,7 +408,7 @@ echo "🎯 Evaluation completed successfully!"
 
 ### 8.3 Evaluation Results
 
-Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the Avg@32 metric (average of 32 samples) for our evaluation:
+Detailed evaluation results on AIME24/AIME25 are shown in the table below. To ensure evaluation accuracy, we used the pass@1 metric (averaged over 32 samples) for our evaluation:
 
 <!-- Table base styling (optional) -->
 <!-- Table content -->
